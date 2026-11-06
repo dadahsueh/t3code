@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>T3 Code × RustDesk Transport — Change Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f7f5f0;
+    --card:#ffffff;
+    --line:#e9e3d6;
+    --line-soft:#f0ece2;
+    --ink:#14171e;
+    --body:#3a4256;
+    --muted:#7c7a72;
+    --primary:#2f6f5e;
+    --primary-soft:rgba(47,111,94,.08);
+    --amber:#c97b3f;
+    --amber-soft:rgba(201,123,63,.10);
+    --rose:#b06367;
+    --rose-soft:rgba(176,99,103,.10);
+    --mono:'JetBrains Mono',monospace;
+    --sans:'Outfit',sans-serif;
+    --serif:'DM Serif Display',serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--bg); color:var(--body);
+    font-family:var(--sans); font-size:15px; line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background:
+      radial-gradient(620px 320px at 8% -4%, rgba(47,111,94,.05), transparent 70%),
+      radial-gradient(520px 300px at 96% 2%, rgba(201,123,63,.05), transparent 70%);
+  }
+  .wrap{position:relative; z-index:1; max-width:1080px; margin:0 auto; padding:0 24px 96px}
+
+  /* ---------- header ---------- */
+  header{padding:64px 0 40px}
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px; font-size:11.5px; font-weight:600;
+    letter-spacing:.13em; text-transform:uppercase; color:var(--primary);
+    background:var(--primary-soft); border:1px solid rgba(47,111,94,.18);
+    padding:6px 12px; border-radius:999px; margin-bottom:26px;
+  }
+  h1{
+    font-family:var(--serif); font-weight:400; font-size:clamp(30px,5vw,46px);
+    line-height:1.1; letter-spacing:-.015em; color:var(--ink); margin:0 0 16px; max-width:19ch;
+  }
+  .lede{font-size:18px; line-height:1.55; color:var(--body); max-width:64ch; margin:0 0 28px}
+  .metastrip{
+    display:flex; flex-wrap:wrap; gap:0; border:1px solid var(--line); border-radius:14px;
+    background:var(--card); overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,.04);
+  }
+  .metastrip div{padding:14px 20px; border-right:1px solid var(--line-soft); min-width:150px; flex:1}
+  .metastrip div:last-child{border-right:none}
+  .metastrip dt{font-size:10.5px; letter-spacing:.11em; text-transform:uppercase; color:var(--muted); margin:0 0 4px}
+  .metastrip dd{margin:0; font-size:14px; font-weight:600; color:var(--ink)}
+
+  /* ---------- sections ---------- */
+  section{padding:52px 0; border-top:1px solid var(--line)}
+  section:first-of-type{border-top:none}
+  h2{
+    font-family:var(--serif); font-weight:400; font-size:clamp(23px,3.4vw,30px);
+    line-height:1.18; color:var(--ink); margin:0 0 10px; letter-spacing:-.01em;
+    display:flex; align-items:center; gap:12px;
+  }
+  h2 svg{flex:none; color:var(--primary)}
+  h3{font-size:15.5px; font-weight:600; color:var(--ink); margin:0 0 8px; letter-spacing:-.005em}
+  .sub{color:var(--muted); font-size:14px; max-width:72ch; margin:0 0 28px}
+  .card{
+    background:var(--card); border:1px solid var(--line); border-radius:16px; padding:22px 24px;
+    box-shadow:0 2px 8px rgba(0,0,0,.04);
+  }
+  code{
+    font-family:var(--mono); font-size:.86em; background:var(--line-soft);
+    padding:2px 6px; border-radius:5px; color:var(--ink); word-break:break-word;
+  }
+  .path{font-family:var(--mono); font-size:12.5px; color:var(--primary); background:none; padding:0}
+
+  /* ---------- verdict ---------- */
+  .verdict{
+    display:grid; grid-template-columns:1.15fr .85fr; gap:0; border:1px solid var(--line);
+    border-radius:18px; overflow:hidden; background:var(--card); box-shadow:0 4px 16px -2px rgba(0,0,0,.06);
+  }
+  .verdict-main{padding:30px 32px}
+  .verdict-side{padding:30px 32px; background:var(--primary-soft); border-left:1px solid var(--line)}
+  .verdict-label{
+    font-size:11px; letter-spacing:.13em; text-transform:uppercase; font-weight:600;
+    color:var(--primary); margin-bottom:12px;
+  }
+  .verdict-main p{margin:0 0 14px}
+  .verdict-main ul{margin:0; padding-left:18px}
+  .verdict-main li{margin-bottom:9px}
+  .verdict-main li:last-child{margin-bottom:0}
+  .verdict-main strong{color:var(--ink)}
+  .doseq{display:flex; flex-direction:column; gap:12px}
+  .doseq li{list-style:none; display:flex; gap:10px; font-size:14px; align-items:flex-start}
+  .doseq .num{
+    flex:none; width:22px; height:22px; border-radius:6px; background:var(--primary); color:#fff;
+    font-size:12px; font-weight:600; display:grid; place-items:center; margin-top:1px;
+  }
+
+  /* ---------- corrections ---------- */
+  .corr{display:grid; grid-template-columns:96px 1fr; gap:0; border:1px solid var(--line);
+    border-radius:16px; background:var(--card); overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,.04)}
+  .corr+.corr{margin-top:16px}
+  .corr-mark{
+    background:var(--amber-soft); border-right:1px solid var(--line);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; padding:22px 8px;
+  }
+  .corr-mark .n{font-family:var(--serif); font-size:30px; color:var(--amber); line-height:1}
+  .corr-mark .l{font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--amber); text-align:center}
+  .corr-body{padding:22px 26px}
+  .corr-body h3{margin-bottom:10px}
+  .was{
+    display:grid; grid-template-columns:74px 1fr; gap:0 14px; font-size:13.5px;
+    margin:0 0 12px; align-items:baseline;
+  }
+  .was .lbl{font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted)}
+  .was .lbl.was{color:var(--rose)}
+  .was .lbl.now{color:var(--primary)}
+  .quote{
+    font-family:var(--mono); font-size:12px; color:var(--ink); background:var(--line-soft);
+    border-radius:8px; padding:10px 14px; margin:0 0 12px; line-height:1.5; overflow-x:auto;
+  }
+  .impact{font-size:14px; color:var(--body); margin:0}
+  .impact b{color:var(--ink)}
+
+  /* ---------- diagrams ---------- */
+  .fig{margin:26px 0 8px; border:1px solid var(--line); border-radius:16px; background:var(--card);
+    padding:24px; box-shadow:0 2px 8px rgba(0,0,0,.04); overflow-x:auto}
+  .fig svg{display:block; width:100%; height:auto; min-width:640px}
+  .figcap{font-size:12.5px; color:var(--muted); margin:10px 4px 0; text-align:center}
+  .fig-title{font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted);
+    margin:0 0 18px; font-weight:600}
+
+  /* ---------- table ---------- */
+  table{width:100%; border-collapse:separate; border-spacing:0; font-size:13.5px; background:var(--card);
+    border:1px solid var(--line); border-radius:14px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,.04)}
+  th,td{padding:13px 16px; text-align:left; vertical-align:top; border-bottom:1px solid var(--line-soft)}
+  th{font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted);
+    font-weight:600; background:var(--line-soft)}
+  tr:last-child td{border-bottom:none}
+  td.dim{color:var(--muted)}
+  .optcol{font-weight:600; color:var(--ink)}
+  .badge{display:inline-block; font-size:10px; letter-spacing:.09em; text-transform:uppercase;
+    font-weight:600; padding:3px 8px; border-radius:999px; white-space:nowrap}
+  .b-rec{background:var(--primary-soft); color:var(--primary); border:1px solid rgba(47,111,94,.22)}
+  .b-alt{background:var(--amber-soft); color:var(--amber); border:1px solid rgba(201,123,63,.22)}
+  .b-no{background:var(--rose-soft); color:var(--rose); border:1px solid rgba(176,99,103,.2)}
+
+  /* ---------- bench ---------- */
+  .bench{display:grid; grid-template-columns:168px 1fr 52px; gap:14px; align-items:center; padding:7px 0}
+  .bench-label{font-size:13px; color:var(--body)}
+  .bench-track{height:14px; background:var(--line-soft); border-radius:7px; overflow:hidden}
+  .bench-fill{height:100%; background:var(--primary); border-radius:7px}
+  .bench-fill.amber{background:var(--amber)}
+  .bench-fill.rose{background:var(--rose)}
+  .bench-val{font-size:12px; font-family:var(--mono); color:var(--muted); text-align:right}
+
+  /* ---------- timeline ---------- */
+  .timeline{list-style:none; padding:0; margin:0; position:relative}
+  .timeline::before{content:""; position:absolute; left:9px; top:10px; bottom:10px; width:2px;
+    background:linear-gradient(var(--primary),rgba(47,111,94,.15))}
+  .timeline li{position:relative; padding:0 0 30px 38px}
+  .timeline li:last-child{padding-bottom:0}
+  .timeline li::before{content:""; position:absolute; left:0; top:3px; width:20px; height:20px;
+    border-radius:50%; background:var(--bg); border:2px solid var(--primary)}
+  .timeline .ph{font-size:11px; letter-spacing:.11em; text-transform:uppercase; color:var(--primary);
+    font-weight:600; margin-bottom:3px}
+  .timeline h3{margin-bottom:8px}
+  .timeline p{margin:0 0 10px; font-size:14px; max-width:76ch}
+  .filelist{margin:0; padding:0; list-style:none; display:flex; flex-wrap:wrap; gap:7px}
+  .filelist li{font-family:var(--mono); font-size:11.5px; background:var(--line-soft);
+    border:1px solid var(--line); border-radius:6px; padding:4px 9px; color:var(--body)}
+  .filelist li.add{background:var(--primary-soft); border-color:rgba(47,111,94,.22); color:var(--primary)}
+  .effort{display:inline-block; font-family:var(--mono); font-size:11px; color:var(--muted);
+    border:1px solid var(--line); border-radius:999px; padding:2px 9px; margin-left:8px; vertical-align:2px}
+
+  /* ---------- misc ---------- */
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px}
+  .kv{display:grid; grid-template-columns:150px 1fr; row-gap:9px; column-gap:16px; margin:0; font-size:13.5px}
+  .kv dt{color:var(--muted); border-bottom:1px dashed var(--line); padding-bottom:8px}
+  .kv dd{margin:0; border-bottom:1px dashed var(--line); padding-bottom:8px; color:var(--ink)}
+  .callout{border-radius:14px; padding:20px 24px; font-size:14px; border:1px solid var(--line)}
+  .callout.warn{background:var(--amber-soft); border-color:rgba(201,123,63,.25)}
+  .callout.info{background:var(--primary-soft); border-color:rgba(47,111,94,.22)}
+  .callout.stop{background:var(--rose-soft); border-color:rgba(176,99,103,.25)}
+  .callout h3{margin-bottom:8px}
+  .callout p:last-child{margin-bottom:0}
+  ul.tight{margin:8px 0 0; padding-left:19px; font-size:14px}
+  ul.tight li{margin-bottom:6px}
+  .src{font-family:var(--mono); font-size:11px; color:var(--muted)}
+  footer{padding:40px 0 0; border-top:1px solid var(--line); color:var(--muted); font-size:12.5px}
+  @media (max-width:820px){
+    .verdict{grid-template-columns:1fr}
+    .verdict-side{border-left:none; border-top:1px solid var(--line)}
+    .grid2{grid-template-columns:1fr}
+    .corr{grid-template-columns:1fr}
+    .corr-mark{flex-direction:row; border-right:none; border-bottom:1px solid var(--line); padding:12px 20px}
+    .corr-mark .n{font-size:22px}
+    .bench{grid-template-columns:118px 1fr 46px; gap:9px}
+    .wrap{padding:0 18px 64px}
+    header{padding:40px 0 28px}
+    section{padding:38px 0}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17V7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M8 21v-2a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/></svg>
+    Technical plan · fork of pingdotgg/t3code
+  </div>
+  <h1>Wiring a RustDesk transport into T3 Code</h1>
+  <p class="lede">You asked for two approaches — a Cordis-style plugin system with the RustDesk protocol as a plugin, or a direct modification. Here is the architecture analysis, the seam that already exists in the codebase, and a recommendation with a phased plan.</p>
+  <div class="metastrip">
+    <div><dt>Upstream</dt><dd>pingdotgg/t3code · MIT · 49.1k★</dd></div>
+    <div><dt>Your fork</dt><dd>dadahsueh/t3code</dd></div>
+    <div><dt>Relay limit</dt><dd>3 linked machines (not connections)</dd></div>
+    <div><dt>RustDesk licence</dt><dd>AGPL-3.0</dd></div>
+    <div><dt>Public servers</dt><dd>rs-ny.rustdesk.com</dd></div>
+  </div>
+</header>
+
+<!-- ======================= VERDICT ======================= -->
+<section>
+  <h2>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 7v10l8 5 8-5V7z"/><path d="m9 12 2 2 4-4"/></svg>
+    The verdict
+  </h2>
+  <p class="sub">Short version first. The full reasoning is in the sections below.</p>
+
+  <div class="verdict">
+    <div class="verdict-main">
+      <div class="verdict-label">Recommendation</div>
+      <p><strong>Do not build a Cordis-style plugin runtime.</strong> Build a narrow, house-style <em>transport provider registry</em> — the same shape as the repo's existing <code>secret-provider-*</code> registry — and make RustDesk the second implementation beside Cloudflare Tunnel.</p>
+      <ul class="tight">
+        <li><strong>The seam already exists.</strong> <code>ManagedEndpointProvider</code> already abstracts tunnel provisioning behind injectable tunnel/DNS clients, and <code>RelayManagedEndpointProviderKind</code> already reserves a <code>"t3_relay"</code> slot.</li>
+        <li><strong>The real abstraction gap is the connector</strong> (<code>cloudflared</code> spawn + pin + update), not the provider — and that gap is what RustDesk actually forces you to confront.</li>
+        <li><strong>A generic plugin runtime is a second, competing abstraction</strong> in a codebase that already has Effect <code>Context.Service</code> + <code>Layer</code> as its extension model. Two extension systems is a maintenance sink, not a feature.</li>
+      </ul>
+    </div>
+    <div class="verdict-side">
+      <div class="verdict-label" style="color:var(--primary)">But first — three things need fixing</div>
+      <ol class="doseq">
+        <li><span class="num">1</span><span>The <b>"3 connections"</b> is 3 <b>linked machines</b>, and it lives in T3 Code's own database. Swapping the transport does not touch it — it is a one-line constant.</span></li>
+        <li><span class="num">2</span><span>The <b>free RustDesk servers have no accounts and no authenticator</b>. TOTP is a paid Pro feature of a different service. Clerk already gives you MFA.</span></li>
+        <li><span class="num">3</span><span>T3 Code has <b>no remote-control capability</b> to plug RustDesk into. "Computer use" is a Codex tool label, not a T3 Code feature.</span></li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="callout info" style="margin-top:18px">
+    <h3>The honest framing of the goal</h3>
+    <p>There are two separate problems hiding inside "use RustDesk's free servers because T3 Code limits 3 connections":</p>
+    <ul class="tight">
+      <li><strong>Problem A — link more than 3 machines.</strong> This is <em>not</em> a transport problem. It is a product/policy constant in T3 Code's relay. Fixing it takes one line, regardless of transport.</li>
+      <li><strong>Problem B — stop depending on Cloudflare Tunnel.</strong> This <em>is</em> a transport problem, and it is a legitimate reason to want a RustDesk-style rendezvous + relay.</li>
+    </ul>
+    <p style="margin-top:10px">The plan below treats them separately, because a transport swap that does not move the cap would look like failure when it was actually a success.</p>
+  </div>
+</section>
+
+<!-- ======================= CORRECTIONS ======================= -->
+<section>
+  <h2>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+    Three premise corrections
+  </h2>
+  <p class="sub">Each of these changes what you would build, so they come before any architecture.</p>
+
+  <div class="corr">
+    <div class="corr-mark"><div class="n">01</div><div class="l">The limit</div></div>
+    <div class="corr-body">
+      <h3>It is 3 <em>machines</em>, not 3 connections — and it is not a transport limit</h3>
+      <div class="was"><span class="lbl was">Assumed</span><span>"T3 Code limits me to 3 concurrent connections; a free relay with no cap will fix that."</span></div>
+      <div class="quote">Each T3 Connect account can link up to 3 machines. <b>Phones and browsers do not count.</b> A paid T3 Chat plan raises the limit to 10 machines with Pro, or 100 with Premier. <span style="color:var(--muted)">— docs/user/remote-access.md</span></div>
+      <p class="impact"><b>What it actually is:</b> <code>DEFAULT_MANAGED_TUNNEL_LIMIT = 3</code> at <code class="path">packages/contracts/src/relay.ts:969</code> — the number of linked <em>environments</em> (host machines) a Clerk account may hold a provisioned managed tunnel for. It is enforced in T3 Code's own Postgres, in <code class="path">infra/relay/src/environments/ManagedTunnelLimits.ts:173</code>, serialised per user with a <code>pg_advisory_xact_lock</code> (line 159) and counted from the <code>relayManagedEndpointAllocations</code> table (lines 73–99).</p>
+      <p class="impact" style="margin-top:10px"><b>Consequence:</b> the count is a row count, not a transport property. A RustDesk transport that provisions a "managed endpoint" is still one allocation per machine, so the cap still applies — <em>and a RustDesk transport that provisions <em>no</em> managed endpoint would fall outside the counter entirely</em>, which is precisely the kind of accident you should not build on. Meanwhile the number of simultaneous clients (phones, browsers) connected to one machine was never capped.</p>
+      <p class="impact" style="margin-top:10px"><b>Cheapest correct fix:</b> raise the constant (one line) or insert a row into the <code>relayManagedTunnelLimits</code> override table — no transport work required. <code>T3CHAT_PLAN_TUNNEL_LIMITS = { pro: 10, premier: 100 }</code> (<code class="path">packages/contracts/src/relay.ts:972</code>) already shows the intended knob.</p>
+    </div>
+  </div>
+
+  <div class="corr">
+    <div class="corr-mark"><div class="n">02</div><div class="l">Auth</div></div>
+    <div class="corr-body">
+      <h3>The free RustDesk servers have no accounts — and no authenticator</h3>
+      <div class="was"><span class="lbl was">Assumed</span><span>"RustDesk has no limitations and there's authenticator support, so I get unlimited connections plus 2FA for free."</span></div>
+      <div class="quote">The empty default intentionally disables relay key validation… An empty key allows clients without a matching key to use the relay <span style="color:var(--muted)">— rustdesk-server/docs/environment-variables.md:64</span></div>
+      <p class="impact"><b>The split:</b> RustDesk Server <b>OSS</b> (<code>hbbs</code> + <code>hbbr</code>) is a peer registry and a byte relay. It has <em>no user table, no login, no OAuth, no TOTP</em> — its own docs say "If you need a web console, API access, OIDC, LDAP, 2FA, device management… compare it with RustDesk Server Pro".</p>
+      <p class="impact" style="margin-top:10px"><b>Where TOTP actually lives:</b> <code class="path">rustdesk/src/auth_2fa.rs</code> in the <em>client</em> — a <code>totp_rs</code> implementation for a RustDesk <em>account</em> backed by <code>api.rustdesk.com</code>. That is the paid account service, a completely different system from the public rendezvous/relay servers. The public servers you want to use inherit <em>none</em> of it.</p>
+      <p class="impact" style="margin-top:10px"><b>Consequence:</b> the public servers authenticate peers only by a shared <em>symmetric licence key</em> (<code class="path">src/relay_server.rs:466</code>, <code class="path">src/rendezvous_server.rs:766</code>) — a single public string. There is no per-user identity, no second factor, no revocation, no audit. T3 Code's Clerk-based identity, DPoP-bound tokens and per-environment scope checks are strictly stronger and would have to be re-implemented on top of the RustDesk transport rather than inherited from it.</p>
+      <p class="impact" style="margin-top:10px"><b>What Clerk already gives you:</b> Clerk supports TOTP / authenticator-app MFA and passkeys today. T3 Code has no 2FA of its own, so "add authenticator support" is a Clerk configuration task, not a RustDesk benefit.</p>
+    </div>
+  </div>
+
+  <div class="corr">
+    <div class="corr-mark"><div class="n">03</div><div class="l">Remote ctrl</div></div>
+    <div class="corr-body">
+      <h3>There is no remote-control feature in T3 Code for RustDesk to fit into</h3>
+      <div class="was"><span class="lbl was">Assumed</span><span>"RustDesk's remote control fits T3 Code's computer use very well."</span></div>
+      <div class="quote">export const COMPUTER_USE_TOOL_SOURCE = { key: "computer-use", name: "Computer Use", kind: "computer" }; <span style="color:var(--muted)">— packages/shared/src/toolActivity.ts:31</span></div>
+      <p class="impact"><b>What "computer use" is today:</b> a <em>presentation label</em> for a tool that the <b>Codex</b> provider executes. T3 Code renders the icon and title; it does not capture a screen or inject input.</p>
+      <p class="impact" style="margin-top:10px"><b>What T3 Code actually implements:</b> SnapShot (a one-way screenshot attached to a draft — no input, no remote transport); the Device panel, which drives <em>iOS/Android simulators and emulators</em> over a frame stream (<code class="path">packages/client-runtime/src/device/stream.ts</code>); and a browser preview over a CDP relay. There is no "take over this machine from my phone" path.</p>
+      <p class="impact" style="margin-top:10px"><b>Consequence:</b> RustDesk's remote control (screen capture + <code>uinput</code>/<code>CGEvent</code>/<code>SendInput</code> injection) is a <em>new feature</em>, not an integration. And it rides on a completely separate stack from the transport: it needs RustDesk's video codec and input message formats, which are a far bigger lift than the relay work. The good news is that T3 Code's device layer already has the right shape — a frame sink in, a control channel out — so a RustDesk-style remote-control agent could drop in there without touching the agent/tool layer.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= SYSTEM MAP ======================= -->
+<section>
+  <h2>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+    The two systems are shaped differently
+  </h2>
+  <p class="sub">This mismatch — a URL-shaped transport versus a peer-shaped transport — is the single biggest engineering fact in this plan, and it is invisible until you draw the paths.</p>
+
+  <div class="fig">
+    <p class="fig-title">Today — T3 Code gives the client a public URL</p>
+    <svg viewBox="0 0 980 230" role="img" aria-label="T3 Code current data path">
+      <defs>
+        <marker id="ar1" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto">
+          <path d="M0,0 L0,6.4 L7.5,3.2 z" fill="#7c7a72"/>
+        </marker>
+      </defs>
+      <!-- client -->
+      <rect x="14" y="70" width="150" height="66" rx="12" fill="#fff" stroke="#e9e3d6"/>
+      <text x="89" y="97" text-anchor="middle" font-family="Outfit" font-size="14" font-weight="600" fill="#14171e">Client app</text>
+      <text x="89" y="117" text-anchor="middle" font-family="Outfit" font-size="11.5" fill="#7c7a72">web / mobile / desktop</text>
+      <!-- cloudflare edge -->
+      <rect x="264" y="56" width="190" height="94" rx="12" fill="rgba(47,111,94,.07)" stroke="rgba(47,111,94,.3)"/>
+      <text x="359" y="86" text-anchor="middle" font-family="Outfit" font-size="14" font-weight="600" fill="#2f6f5e">Cloudflare edge</text>
+      <text x="359" y="107" text-anchor="middle" font-family="Outfit" font-size="11.5" fill="#3a4256">public HTTPS + WSS</text>
+      <text x="359" y="126" text-anchor="middle" font-family="Outfit" font-size="11.5" fill="#3a4256">named tunnel hostname</text>
+      <!-- host -->
+      <rect x="554" y="56" width="190" height="94" rx="12" fill="#fff" stroke="#e9e3d6"/>
+      <text x="649" y="86" text-anchor="middle" font-family="Outfit" font-size="14" font-weight="600" fill="#14171e">cloudflared</text>
+      <text x="649" y="107" text-anchor="middle" font-family="Outfit" font-size="11.5" fill="#7c7a72">connector on the host</text>
+      <text x="649" y="126" text-anchor="middle" font-family="Outfit" font-size="11.5" fill="#7c7a72">managed + pinned release</text>
+      <!-- origin -->
+      <rect x="814" y="70" width="152" height="66" rx="12" fill="#fff" stroke="#e9e3d6"/>
+      <text x="890" y="97" text-anchor="middle" font-family="Outfit" font-size="14" font-weight="600" fill="#14171e">T3 Code server</text>
+      <text x="890" y="117" text-anchor="middle" font-family="Outfit" font-size="11.5" fill="#7c7a72">127.0.0.1:port</text>
+      <!-- arrows -->
+      <line x1="164" y1="103" x2="258" y2="103" stroke="#7c7a72" stroke-width="1.6" marker-end="url(#ar1)"/>
+      <text x="211" y="92" text-anchor="middle" font-family="JetBrains Mono" font-size="10.5" fill="#7c7a72">HTTPS</text>
+      <line x1="454" y1="103" x2="548" y2="103" stroke="#7c7a72" stroke-width="1.6" marker-end="url(#ar1)"/>
+      <text x="501" y="92" text-anchor="middle" font-family="JetBrains Mono" font-size="10.5" fill="#7c7a72">TLS</text>
+      <line x1="744" y1="103" x2="808" y2="103" stroke="#7c7a72" stroke-width="1.6" marker-end="url(#ar1)"/>
+      <text x="776" y="92" text-anchor="middle" font-family="JetBrains Mono" font-size="10.5" fill="#7c7a72">HTTP</text>
+      <!-- relay note -->
+      <rect x="264" y="176" width="480" height="40" rx="10" fill="rgba(47,111,94,.05)" stroke="rgba(47,111,94,.16)"/>
+      <text x="504" y="201" text-anchor="middle" font-family="Outfit" font-size="12" fill="#3a4256">The T3 relay Worker brokers credentials only — it never proxies traffic. <tspan font-family="JetBrains Mono" font-size="11">docs/internals/t3-connect.md:5-6</tspan></text>
+    </svg>
+    <p class="figcap">The client receives <code>httpBaseUrl</code> / <code>wsBaseUrl</code> and opens them directly. Everything downstream of the URL is interchangeable.</p>
+  </div>
+
+  <div class="fig">
+    <p class="fig-title">RustDesk — there is no URL; there are two peers</p>
+    <svg viewBox="0 0 980 250" role="img" aria-label="RustDesk rendezvous and relay data path">
+      <defs>
+        <marker id="ar2" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto">
+          <path d="M0,0 L0,6.4 L7.5,3.2 z" fill="#c97b3f"/>
+        </marker>
+      </defs>
+      <!-- host peer -->
+      <rect x="14" y="24" width="176" height="66" rx="12" fill="#fff" stroke="#e9e3d6"/>
+      <text x="102" y="51" text-anchor="middle" font-family="Outfit" font-size="14" font-weight="600" fill="#14171e">Host peer</text>
+      <text x="102" y="71" text-anchor="middle" font-family="Outfit" font-size="11.5" fill="#7c7a72">registers its ID</text>
+      <!-- client peer -->
+      <rect x="14" y="160" width="176" height="66" rx="12" fill="#fff" stroke="#e9e3d6"/>
+      <text x="102" y="187" text-anchor="middle" font-family="Outfit" font-size="14" font-weight="600" fill="#14171e">Client peer</text>
+      <text x="102" y="207" text-anchor="middle" font-family="Outfit" font-size="11.5" fill="#7c7a72">knows the host ID</text>
+      <!-- rendezvous -->
+      <rect x="300" y="92" width="220" height="66" rx="12" fill="rgba(201,123,63,.08)" stroke="rgba(201,123,63,.32)"/>
+      <text x="410" y="119" text-anchor="middle" font-family="Outfit" font-size="14" font-weight="600" fill="#c97b3f">hbbs — rendezvous</text>
+      <text x="410" y="139" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#3a4256">rs-ny.rustdesk.com:21116</text>
+      <!-- relay -->
+      <rect x="300" y="196" width="220" height="66" rx="12" fill="rgba(201,123,63,.08)" stroke="rgba(201,123,63,.32)"/>
+      <text x="410" y="223" text-anchor="middle" font-family="Outfit" font-size="14" font-weight="600" fill="#c97b3f">hbbr — relay</text>
+      <text x="410" y="243" text-anchor="middle" font-family="Outfit" font-size="11.5" fill="#3a4256">byte-forwarding, opaque</text>
+      <!-- right side: what the client can actually reach -->
+      <rect x="618" y="92" width="348" height="92" rx="12" fill="rgba(176,99,103,.06)" stroke="rgba(176,99,103,.28)"/>
+      <text x="792" y="120" text-anchor="middle" font-family="Outfit" font-size="14" font-weight="600" fill="#b06367">No public URL exists</text>
+      <text x="792" y="142" text-anchor="middle" font-family="Outfit" font-size="12" fill="#3a4256">The client must speak the transport itself,</text>
+      <text x="792" y="160" text-anchor="middle" font-family="Outfit" font-size="12" fill="#3a4256">or a local sidecar must proxy for it.</text>
+      <!-- arrows -->
+      <path d="M190 57 C 240 57, 250 110, 296 116" fill="none" stroke="#c97b3f" stroke-width="1.6" marker-end="url(#ar2)"/>
+      <text x="238" y="78" text-anchor="middle" font-family="JetBrains Mono" font-size="10.5" fill="#c97b3f">register</text>
+      <path d="M190 186 C 240 186, 250 130, 296 124" fill="none" stroke="#c97b3f" stroke-width="1.6" marker-end="url(#ar2)"/>
+      <text x="243" y="168" text-anchor="middle" font-family="JetBrains Mono" font-size="10.5" fill="#c97b3f">punch-hole</text>
+      <path d="M524 124 C 570 124, 570 132, 614 132" fill="none" stroke="#c97b3f" stroke-width="1.6" marker-end="url(#ar2)"/>
+      <text x="569" y="120" text-anchor="middle" font-family="JetBrains Mono" font-size="10.5" fill="#c97b3f">relay addr</text>
+      <path d="M190 84 L 296 210" fill="none" stroke="#c97b3f" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#ar2)"/>
+      <path d="M190 216 L 296 250" fill="none" stroke="#c97b3f" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#ar2)"/>
+    </svg>
+    <p class="figcap">Both peers dial the rendezvous server, the server hands out a relay address, and the two peers are paired on the relay by a shared UUID. After pairing the relay is a pure byte pipe — <code>src/relay_server.rs:461-498</code> pairs, <code>500-560</code> forwards raw bytes.</p>
+  </div>
+
+  <div class="callout warn">
+    <h3>The consequence that decides the whole design</h3>
+    <p>T3 Code's client runtime builds URLs from <code>httpBaseUrl</code> / <code>wsBaseUrl</code> (<code class="path">packages/client-runtime/src/authorization/service.ts:271-330</code>) and speaks plain HTTP + WebSocket to them. A RustDesk transport produces <em>no such URL</em>. So a RustDesk transport is not a drop-in replacement for the tunnel — it requires <strong>a client-side transport agent as well</strong> as a host-side one, or the client runtime has to learn to speak the transport natively.</p>
+    <p style="margin-top:10px">That agent needs somewhere to run. On desktop and mobile that is fine — a sidecar process exposing <code>http://127.0.0.1:&lt;ephemeral&gt;</code> to the existing client runtime, so <em>zero changes</em> are needed in the web/mobile/desktop apps. In a <strong>browser</strong> there is no sidecar, and RustDesk's WebSocket ports (21118 / 21119) would have to be spoken natively in the page — NaCl crypto in WebCrypto is a real project of its own.</p>
+  </div>
+</section>
+
+<!-- ======================= SEAM ======================= -->
+<section>
+  <h2>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="9"/></svg>
+    Where it plugs in
+  </h2>
+  <p class="sub">The codebase already has most of the seam. This is the map of what exists, what is hard-coded, and what has to be extracted.</p>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>Already abstracted — reuse it</h3>
+      <dl class="kv">
+        <dt>Provider service</dt><dd><code class="path">infra/relay/src/environments/ManagedEndpointProvider.ts:149-192</code><br><span style="color:var(--muted);font-size:12.5px">provision · reconcileOrigin · prepareDeprovision · deprovision · release</span></dd>
+        <dt>Tunnel client</dt><dd><code class="path">ManagedEndpointProvider.ts:239-284</code><br><span style="color:var(--muted);font-size:12.5px">get · list · create · putConfiguration · getToken · delete</span></dd>
+        <dt>DNS client</dt><dd><code class="path">ManagedEndpointProvider.ts:319+</code><br><span style="color:var(--muted);font-size:12.5px">listRecords · createRecord · updateRecord · deleteRecord</span></dd>
+        <dt>Provider kind</dt><dd><code class="path">packages/contracts/src/relay.ts:155-159</code><br><span style="color:var(--muted);font-size:12.5px">"manual" · "cloudflare_tunnel" · <b style="color:var(--primary)">"t3_relay" (already reserved)</b></span></dd>
+        <dt>House registry pattern</dt><dd><code class="path">packages/secret-provider-definitions/src/registry.ts:4</code><br><span style="color:var(--muted);font-size:12.5px">makeSecretProviderDefinitionRegistry([...]) — the precedent to copy</span></dd>
+      </dl>
+    </div>
+    <div class="card">
+      <h3>Hard-coded — must be extracted</h3>
+      <dl class="kv">
+        <dt>Connector spawn</dt><dd><code class="path">apps/server/src/cloud/ManagedEndpointRuntime.ts:729-756</code><br><span style="color:var(--muted);font-size:12.5px">spawns <code>cloudflared tunnel … run</code> with TUNNEL_TOKEN</span></dd>
+        <dt>Binary pin & updater</dt><dd><code class="path">packages/shared/src/relayClient.ts</code><br><span style="color:var(--muted);font-size:12.5px">CLOUDFLARED_VERSION = "2026.10.4" (line 31) · download · sha256 · swap · rollback</span></dd>
+        <dt>Client URL building</dt><dd><code class="path">packages/client-runtime/src/authorization/service.ts:271-330</code><br><span style="color:var(--muted);font-size:12.5px">assumes an https/wss origin exists</span></dd>
+        <dt>Limit constant</dt><dd><code class="path">packages/contracts/src/relay.ts:969</code><br><span style="color:var(--muted);font-size:12.5px">DEFAULT_MANAGED_TUNNEL_LIMIT = 3</span></dd>
+        <dt>Cloudflare coupling</dt><dd>20+ files across <code class="path">apps/server/src/cloud/</code>, <code class="path">infra/relay/src/environments/</code>, <code class="path">infra/relay/src/zone.ts</code>, <code class="path">infra/relay/src/worker.ts</code></dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="fig">
+    <p class="fig-title">Proposed seam — one registry, two implementations</p>
+    <svg viewBox="0 0 980 300" role="img" aria-label="Proposed transport provider registry">
+      <defs>
+        <marker id="ar3" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto">
+          <path d="M0,0 L0,6.4 L7.5,3.2 z" fill="#2f6f5e"/>
+        </marker>
+      </defs>
+      <!-- registry -->
+      <rect x="330" y="18" width="320" height="58" rx="12" fill="rgba(47,111,94,.08)" stroke="rgba(47,111,94,.32)"/>
+      <text x="490" y="43" text-anchor="middle" font-family="Outfit" font-size="14.5" font-weight="600" fill="#2f6f5e">TransportProviderRegistry</text>
+      <text x="490" y="62" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#3a4256">packages/contracts/src/transport.ts</text>
+      <!-- interface box -->
+      <rect x="330" y="100" width="320" height="74" rx="12" fill="#fff" stroke="#e9e3d6"/>
+      <text x="490" y="124" text-anchor="middle" font-family="Outfit" font-size="13" font-weight="600" fill="#14171e">TransportProvider</text>
+      <text x="490" y="145" text-anchor="middle" font-family="JetBrains Mono" font-size="10.5" fill="#7c7a72">provision · reconcileOrigin · deprovision</text>
+      <text x="490" y="161" text-anchor="middle" font-family="JetBrains Mono" font-size="10.5" fill="#7c7a72">connectorSpec · linkProof</text>
+      <!-- implementations -->
+      <rect x="60" y="212" width="250" height="70" rx="12" fill="#fff" stroke="#e9e3d6"/>
+      <text x="185" y="238" text-anchor="middle" font-family="Outfit" font-size="13.5" font-weight="600" fill="#14171e">CloudflareTunnelProvider</text>
+      <text x="185" y="258" text-anchor="middle" font-family="Outfit" font-size="11.5" fill="#7c7a72">existing code, moved</text>
+      <text x="185" y="274" text-anchor="middle" font-family="JetBrains Mono" font-size="10.5" fill="#7c7a72">cloudflared connector</text>
+      <rect x="670" y="212" width="250" height="70" rx="12" fill="#fff" stroke="rgba(201,123,63,.4)"/>
+      <text x="795" y="238" text-anchor="middle" font-family="Outfit" font-size="13.5" font-weight="600" fill="#c97b3f">RustDeskProvider</text>
+      <text x="795" y="258" text-anchor="middle" font-family="Outfit" font-size="11.5" fill="#7c7a72">new</text>
+      <text x="795" y="274" text-anchor="middle" font-family="JetBrains Mono" font-size="10.5" fill="#7c7a72">rustdesk connector (AGPL, separate)</text>
+      <!-- arrows -->
+      <path d="M330 40 C 250 40, 240 240, 188 244" fill="none" stroke="#2f6f5e" stroke-width="1.6" marker-end="url(#ar3)"/>
+      <path d="M650 40 C 730 40, 740 240, 792 244" fill="none" stroke="#2f6f5e" stroke-width="1.6" marker-end="url(#ar3)"/>
+      <path d="M490 76 L 490 96" stroke="#2f6f5e" stroke-width="1.6" marker-end="url(#ar3)"/>
+      <path d="M370 174 C 300 174, 250 190, 210 208" fill="none" stroke="#2f6f5e" stroke-width="1.6" marker-end="url(#ar3)"/>
+      <path d="M610 174 C 690 174, 740 190, 780 208" fill="none" stroke="#2f6f5e" stroke-width="1.6" marker-end="url(#ar3)"/>
+    </svg>
+    <p class="figcap">The registry is a list of <em>definitions</em>, not a dynamic runtime — the same shape as <code>secret-provider-definitions</code>. Nothing is loaded at runtime, nothing is sandboxed, and the compiler still checks every implementation against one schema.</p>
+  </div>
+</section>
+
+<!-- ======================= OPTIONS ======================= -->
+<section>
+  <h2>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>
+    The three options
+  </h2>
+  <p class="sub">You named two; I am adding the third because it is what the codebase already implies.</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width:22%"></th>
+        <th style="width:26%">A · Cordis-style plugin runtime</th>
+        <th style="width:26%">B · Direct modification</th>
+        <th style="width:26%">C · Transport provider registry <span class="badge b-rec">recommended</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="optcol">Shape</td>
+        <td>Generic plugin runtime: lifecycle hooks, dependency injection, hot-load, discovery, capability negotiation. RustDesk registered as one plugin among many.</td>
+        <td>Add RustDesk branches inline to the existing Cloudflare-specific code paths.</td>
+        <td>One <code>TransportProvider</code> interface plus a definition registry listing implementations. Effect-native, statically typed.</td>
+      </tr>
+      <tr>
+        <td class="optcol">Touches</td>
+        <td class="dim">A new cross-cutting runtime: new package, new lifecycle contract, new docs, new conventions, plus the RustDesk transport itself. Two extension systems coexist with Effect's <code>Context.Service</code>/<code>Layer</code>.</td>
+        <td class="dim">The provider, the host runtime, the shared relay client, the client runtime, and the contracts — all Cloudflare-shaped.</td>
+        <td class="dim">One new contract package, one registry package, one provider implementation, and the connector lifecycle extracted from the Cloudflare path.</td>
+      </tr>
+      <tr>
+        <td class="optcol">Getting RustDesk in</td>
+        <td>Same cost as C, plus the runtime. Plugin authoring becomes the product.</td>
+        <td>Cheapest start, but every future transport repeats the work and the Cloudflare branches multiply.</td>
+        <td>One interface to implement; the second transport afterwards is a file, not a framework.</td>
+      </tr>
+      <tr>
+        <td class="optcol">Risk</td>
+        <td>Highest. A generic runtime in a 741&nbsp;MB monorepo with 9.7k forks is a fork-wide architectural change upstream will not merge. It also becomes a permanent maintenance obligation.</td>
+        <td>Medium. Contained, but the Cloudflare assumptions stay tangled through the client runtime.</td>
+        <td>Low. Bounded, reviewable, upstreamable, and idiomatic for this codebase.</td>
+      </tr>
+      <tr>
+        <td class="optcol">Upstreamable?</td>
+        <td><span class="badge b-no">unlikely</span></td>
+        <td><span class="badge b-alt">as a patch</span></td>
+        <td><span class="badge b-rec">yes</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div style="height:26px"></div>
+
+  <div class="card">
+    <h3>Why not A, concretely</h3>
+    <p style="margin:0 0 12px">A Cordis-style runtime is not wrong in the abstract — it is wrong <em>here</em>, for three specific reasons:</p>
+    <ul class="tight">
+      <li><strong>The codebase already has an extension system, and it is Effect's.</strong> <code>docs/internals/effect-services.md</code> documents <code>Context.Service</code> + <code>Layer</code> as the house pattern, and the <code>secret-provider-*</code> packages are a worked example of "pluggable thing, registry style" that the team already accepted. A second runtime would compete with both.</li>
+      <li><strong>The thing that needs to be pluggable is already pluggable.</strong> <code>ManagedEndpointProvider</code> already has its two I/O clients injected. Option A rebuilds a seam that exists, and does not fix the one that does not.</li>
+      <li><strong>The seam that is actually missing is the connector, and no plugin runtime fixes it.</strong> <code>cloudflared</code> is spawned in <code>ManagedEndpointRuntime.ts</code> and pinned/downloaded/swapped in <code>packages/shared/src/relayClient.ts</code> (~700 lines). RustDesk needs a different connector binary with a different lifecycle. That is a <em>connector registry</em> problem: <code>{ id, version, urls, sha256, minVersion, install(), spawn(args) }</code>.</li>
+    </ul>
+    <p style="margin:14px 0 0">If you still want a broad plugin system, it deserves its own proposal, its own branch and its own review — but it is <strong>not a prerequisite</strong> for shipping RustDesk, and bundling them makes both reviews harder.</p>
+  </div>
+</section>
+
+<!-- ======================= MATRIX ======================= -->
+<section>
+  <h2>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+    Decision matrix
+  </h2>
+  <p class="sub">Subjective scores for this codebase specifically, not in the abstract.</p>
+
+  <div class="grid2">
+    <div class="card">
+      <h3 style="margin-bottom:12px">A · Plugin runtime</h3>
+      <div class="bench"><span class="bench-label">Time to RustDesk live</span><div class="bench-track"><div class="bench-fill rose" style="width:88%"></div></div><span class="bench-val">long</span></div>
+      <div class="bench"><span class="bench-label">Upstream mergeability</span><div class="bench-track"><div class="bench-fill rose" style="width:15%"></div></div><span class="bench-val">low</span></div>
+      <div class="bench"><span class="bench-label">Fits house style</span><div class="bench-track"><div class="bench-fill rose" style="width:25%"></div></div><span class="bench-val">poor</span></div>
+      <div class="bench"><span class="bench-label">Extensibility gained</span><div class="bench-track"><div class="bench-fill" style="width:90%"></div></div><span class="bench-val">high</span></div>
+      <div class="bench"><span class="bench-label">Maintenance burden</span><div class="bench-track"><div class="bench-fill rose" style="width:90%"></div></div><span class="bench-val">high</span></div>
+    </div>
+    <div class="card">
+      <h3 style="margin-bottom:12px">C · Transport registry</h3>
+      <div class="bench"><span class="bench-label">Time to RustDesk live</span><div class="bench-track"><div class="bench-fill" style="width:52%"></div></div><span class="bench-val">medium</span></div>
+      <div class="bench"><span class="bench-label">Upstream mergeability</span><div class="bench-track"><div class="bench-fill" style="width:85%"></div></div><span class="bench-val">high</span></div>
+      <div class="bench"><span class="bench-label">Fits house style</span><div class="bench-track"><div class="bench-fill" style="width:88%"></div></div><span class="bench-val">high</span></div>
+      <div class="bench"><span class="bench-label">Extensibility gained</span><div class="bench-track"><div class="bench-fill" style="width:70%"></div></div><span class="bench-val">good</span></div>
+      <div class="bench"><span class="bench-label">Maintenance burden</span><div class="bench-track"><div class="bench-fill" style="width:30%"></div></div><span class="bench-val">low</span></div>
+    </div>
+  </div>
+
+  <div class="callout info" style="margin-top:18px">
+    <h3>The condition that would flip this to Option A</h3>
+    <p>If the intent is to let <em>third parties outside this repo</em> ship transports as drop-in packages — a Cordis-like marketplace with runtime discovery — then A becomes correct and C is a stepping stone. Worth deciding explicitly, because it changes who has to live with the abstraction. T3 Code's existing <code>secret-provider-*</code> design suggests the team already answered this question in the negative: definitions are compiled in, not discovered at runtime.</p>
+  </div>
+</section>
+
+<!-- ======================= PHASES ======================= -->
+<section>
+  <h2>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6v6l4 2"/><circle cx="12" cy="12" r="10"/></svg>
+    Phased plan
+  </h2>
+  <p class="sub">Phases 0 and 1 are worth doing regardless of whether the RustDesk transport ever ships.</p>
+
+  <ol class="timeline">
+    <li>
+      <div class="ph">Phase 0 · Spike<span class="effort">3–5 days</span></div>
+      <h3>Prove the protocol, then choose the server</h3>
+      <p>Complete the RustDesk handshake end to end outside the product: the Ed25519-signed X25519 key exchange the server initiates on connect (<code class="path">rustdesk/src/common.rs:2306-2373</code>), the NaCl <code>crypto_box</code> reply (<code>create_symmetric_key_msg</code>, <code>common.rs:2449-2456</code>), peer registration, punch-hole, and relay pairing by UUID. My probe already reaches the signed key-exchange against the live public server — the remaining steps are the crypto.</p>
+      <p><b>Then decide, in this order:</b> (1) public community servers vs <b>self-hosted <code>rustdesk-server</code> OSS</b>; (2) reuse <code>hbb_common</code> (AGPL) vs a clean-room implementation; (3) which side of the licence boundary the connector lives on.</p>
+      <ul class="filelist">
+        <li class="add">poc/probe.py</li>
+        <li class="add">research/protocol-notes.md</li>
+      </ul>
+    </li>
+
+    <li>
+      <div class="ph">Phase 1 · Unblock the cap<span class="effort">1 day</span></div>
+      <h3>Lift the machine limit, independently of transport</h3>
+      <p>Make the machine cap configurable and raise the default: read it from configuration with a fallback, and keep the <code>relayManagedTunnelLimits</code> override row path for per-user exceptions. Update <code>docs/user/remote-access.md</code> and the error string in <code class="path">packages/client-runtime/src/relay/errorPresentation.ts:69-72</code> so the copy matches the real number.</p>
+      <p><b>This alone answers "I am limited to 3" for anyone who only needed more machines</b> — and it is the single highest-value hour in this whole plan. Do it before touching transport, so the RustDesk work is measured against the real remaining gap.</p>
+      <ul class="filelist">
+        <li>packages/contracts/src/relay.ts:969</li>
+        <li>packages/client-runtime/src/relay/errorPresentation.ts:69</li>
+        <li>docs/user/remote-access.md</li>
+      </ul>
+    </li>
+
+    <li>
+      <div class="ph">Phase 2 · Extract the seam<span class="effort">4–6 days</span></div>
+      <h3>Introduce the transport contract and the connector registry</h3>
+      <p>Add the contract and the registry, then move Cloudflare behind them <em>without changing behaviour</em>. This phase ships value on its own: it is the piece that makes the next transport cheap, and it is a clean upstream PR on its own merits.</p>
+      <ul class="filelist">
+        <li class="add">packages/contracts/src/transport.ts</li>
+        <li class="add">packages/transport-core/src/</li>
+        <li class="add">packages/transport-definitions/src/registry.ts</li>
+        <li>infra/relay/src/environments/ManagedEndpointProvider.ts</li>
+        <li>apps/server/src/cloud/ManagedEndpointRuntime.ts:729</li>
+        <li>packages/shared/src/relayClient.ts</li>
+      </ul>
+    </li>
+
+    <li>
+      <div class="ph">Phase 3 · RustDesk transport<span class="effort">3–4 weeks</span></div>
+      <h3>Build the connector pair and the provider</h3>
+      <p>Write the connector as a <strong>separate AGPL-licensed binary in its own repository</strong> (e.g. <code>dadahsueh/t3-rustdesk-connector</code>), launched by the host exactly the way <code>cloudflared</code> is today — pinned, checksummed, self-updating. That keeps the AGPL boundary at the process edge instead of inside an MIT repo. Two roles in one binary: <b>host role</b> (register, accept sessions, proxy bytes to <code>127.0.0.1:port</code>) and <b>client role</b> (request a session, expose a local origin for the existing client runtime).</p>
+      <p>Then add <code>RustDeskProvider</code> to the registry. Note it provisions <em>no</em> Cloudflare tunnel and <em>no</em> DNS record — it returns a rendezvous descriptor plus a connector token — so the <code>ManagedEndpointProvider</code> bookkeeping still works, but the allocation semantics must be revisited against the 3-machine cap.</p>
+      <ul class="filelist">
+        <li class="add">RustDeskProvider</li>
+        <li class="add">connector: rendezvous client + key exchange + relay pairing + byte proxy</li>
+        <li>infra/relay/src/environments/ManagedEndpointProvider.ts</li>
+      </ul>
+    </li>
+
+    <li>
+      <div class="ph">Phase 4 · Client runtime<span class="effort">1–2 weeks</span></div>
+      <h3>Teach the client runtime to use a non-URL origin</h3>
+      <p>Introduce a transport-session abstraction so the client runtime can talk to <em>either</em> a public HTTPS origin <em>or</em> a local sidecar origin. Desktop and mobile then need no app changes at all — the sidecar just appears as another route. The browser is the hard case: either keep the Cloudflare path for web only, or implement RustDesk-over-WebSocket (ports 21118/21119) natively in the page, which needs NaCl in the browser.</p>
+      <ul class="filelist">
+        <li>packages/client-runtime/src/authorization/service.ts:271</li>
+        <li class="add">packages/client-runtime/src/transport/session.ts</li>
+      </ul>
+    </li>
+
+    <li>
+      <div class="ph">Phase 5 · Separate project<span class="effort">4–8 weeks</span></div>
+      <h3>Remote control — a different project entirely</h3>
+      <p>RustDesk's remote control (screen capture plus input injection) is a <em>product</em>, not a transport. It needs RustDesk's video codec and input message formats, and it lands in the device layer (<code class="path">packages/client-runtime/src/device/stream.ts</code>) where a frame sink and a control channel already exist. Attempting it inside the transport work will sink both. Sequence it after Phase 4, and treat it as its own design document.</p>
+    </li>
+  </ol>
+</section>
+
+<!-- ======================= LICENCE ======================= -->
+<section>
+  <h2>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    Licence and policy
+  </h2>
+  <p class="sub">The one hard constraint on this design.</p>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>What the licences are</h3>
+      <ul class="tight" style="margin-top:6px">
+        <li><code>rustdesk/rustdesk-server</code> — <b>AGPL-3.0</b> (confirmed via <code>gh api repos/…/license</code>)</li>
+        <li><code>rustdesk/rustdesk</code> (client) — <b>AGPL-3.0</b></li>
+        <li><code>rustdesk/hbb_common</code> — the shared protocol crate; <b>no LICENSE file and no <code>license</code> field in its Cargo.toml</b>, and it is vendored into <code>rustdesk-server</code> as a submodule at <code>libs/hbb_common</code></li>
+        <li><code>pingdotgg/t3code</code> — <b>MIT</b></li>
+      </ul>
+      <p style="margin:14px 0 0; font-size:13.5px">AGPL's copyleft reaches the whole work when you <em>convey</em> it. Linking <code>hbb_common</code> into the T3 Code server or client would put the MIT codebase at risk.</p>
+    </div>
+    <div class="card">
+      <h3>How to stay clean</h3>
+      <ul class="tight" style="margin-top:6px">
+        <li>Put the RustDesk client in <b>its own repository, AGPL-licensed</b>, as a separate process.</li>
+        <li>Let T3 Code <b>download and launch it</b>, exactly as it already does for <code>cloudflared</code> (<code class="path">packages/shared/src/relayClient.ts</code>).</li>
+        <li>Communicate over a socket at arm's length. This is the same structure the Cloudflare connector already uses, so it is a familiar shape for reviewers.</li>
+        <li>Do not copy <code>rendezvous.proto</code> into the MIT repo — keep protocol knowledge in the AGPL repo or reimplement from observed behaviour.</li>
+      </ul>
+      <p style="margin:14px 0 0; font-size:13.5px"><b>This is a legal judgement, not an engineering one.</b> Get counsel before shipping; the containment structure above is the standard mitigation, not a guarantee.</p>
+    </div>
+  </div>
+
+  <div class="callout stop" style="margin-top:18px">
+    <h3>Using the free public servers for a third-party product</h3>
+    <p>RustDesk's public community servers are a donation-funded service. Two separate issues, and the second is the one that bites:</p>
+    <ul class="tight">
+      <li><strong>Technically</strong> it works. The relay is a content-agnostic byte forwarder and the rendezvous protocol is fully specified, so a third-party client can register, be assigned a relay and tunnel bytes. My probe confirms a non-RustDesk client is accepted at the protocol level — it reaches the live public server's signed key-exchange. The servers apply rate limiting, bandwidth throttling and blocking, so a real product would be sharing a free resource with the entire RustDesk user base.</li>
+      <li><strong>Policy-wise</strong> I did not find an explicit published statement permitting or forbidding third-party use of the public servers, and I would not build on that ambiguity. Ask RustDesk directly, or self-host.</li>
+    </ul>
+    <p style="margin-top:10px"><b>Recommendation:</b> self-host <code>rustdesk-server</code> OSS (AGPL, roughly the price of a small VPS) for anything real. Use the public servers only for local development and the Phase 0 spike. Self-hosting also gives you your own key pair, your own relay list, and no shared rate limits.</p>
+  </div>
+</section>
+
+<!-- ======================= OPEN QUESTIONS ======================= -->
+<section>
+  <h2>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+    Decisions I need from you
+  </h2>
+  <p class="sub">These change the plan materially, so they are worth answering before Phase 2 starts.</p>
+
+  <div class="card">
+    <ol class="tight" style="margin:0; padding-left:20px; font-size:14.5px">
+      <li><b>Is the goal more machines, or no Cloudflare?</b> If it is only more machines, stop after Phase 1 — that is the whole fix. If it is Cloudflare independence, Phase 0 onward applies.</li>
+      <li><b>Self-hosted RustDesk server, or the free public ones?</b> Self-hosting costs a few euros a month and removes the licence-adjacent and policy ambiguity. Public servers are free and shared.</li>
+      <li><b>Web client in scope?</b> Desktop and mobile are straightforward with a sidecar. A browser needs RustDesk-over-WebSocket natively, which is a substantial sub-project. Keeping the Cloudflare path for web only is a legitimate option.</li>
+      <li><b>AGPL boundary:</b> separate AGPL repo for the connector (recommended), or a clean-room reimplementation inside a permissive licence?</li>
+      <li><b>Is this for your own use, or to upstream?</b> Upstreamability argues for the narrow registry (Option C). Personal use lets you go more direct.</li>
+    </ol>
+  </div>
+</section>
+
+<footer>
+  <p>Sources are cited inline as <code>path:line</code> against <code>pingdotgg/t3code</code> (MIT) and <code>rustdesk/rustdesk-server</code>, <code>rustdesk/rustdesk</code>, <code>rustdesk/hbb_common</code> (AGPL-3.0). Live-server observations are from a stdlib-only Python probe against <code>rs-ny.rustdesk.com:21116</code>.</p>
+  <p style="margin-top:8px">Prepared 6 November 2026 · fork at github.com/dadahsueh/t3code</p>
+</footer>
+
+</div>
+</body>
+</html>
