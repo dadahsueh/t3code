@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>T3 Code — Plugin System Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f7f5f0; --card:#fff; --line:#e9e3d6; --line-soft:#f0ece2;
+    --ink:#14171e; --body:#3a4256; --muted:#7c7a72;
+    --primary:#c97b3f; --primary-soft:rgba(201,123,63,.10);
+    --good:#2f6f5e; --good-soft:rgba(47,111,94,.08);
+    --rose:#b06367; --rose-soft:rgba(176,99,103,.10);
+    --mono:'JetBrains Mono',monospace; --sans:'Outfit',sans-serif; --serif:'DM Serif Display',serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--body);font-family:var(--sans);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+    background:radial-gradient(640px 340px at 6% -4%,rgba(201,123,63,.055),transparent 70%),
+               radial-gradient(540px 300px at 97% 1%,rgba(47,111,94,.045),transparent 70%)}
+  .wrap{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:0 24px 96px}
+  header{padding:62px 0 38px}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11.5px;font-weight:600;letter-spacing:.13em;
+    text-transform:uppercase;color:var(--primary);background:var(--primary-soft);
+    border:1px solid rgba(201,123,63,.2);padding:6px 12px;border-radius:999px;margin-bottom:24px}
+  h1{font-family:var(--serif);font-weight:400;font-size:clamp(30px,5vw,45px);line-height:1.1;
+    letter-spacing:-.015em;color:var(--ink);margin:0 0 16px;max-width:20ch}
+  .lede{font-size:18px;line-height:1.55;max-width:66ch;margin:0 0 28px}
+  .metastrip{display:flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:14px;background:var(--card);
+    overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+  .metastrip div{padding:13px 20px;border-right:1px solid var(--line-soft);min-width:148px;flex:1}
+  .metastrip div:last-child{border-right:none}
+  .metastrip dt{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);margin:0 0 4px}
+  .metastrip dd{margin:0;font-size:14px;font-weight:600;color:var(--ink)}
+  section{padding:50px 0;border-top:1px solid var(--line)}
+  section:first-of-type{border-top:none}
+  h2{font-family:var(--serif);font-weight:400;font-size:clamp(23px,3.4vw,30px);line-height:1.18;color:var(--ink);
+    margin:0 0 10px;letter-spacing:-.01em;display:flex;align-items:center;gap:12px}
+  h2 svg{flex:none;color:var(--primary)}
+  h3{font-size:15.5px;font-weight:600;color:var(--ink);margin:0 0 8px;letter-spacing:-.005em}
+  .sub{color:var(--muted);font-size:14px;max-width:74ch;margin:0 0 26px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px 24px;
+    box-shadow:0 2px 8px rgba(0,0,0,.04)}
+  code{font-family:var(--mono);font-size:.86em;background:var(--line-soft);padding:2px 6px;border-radius:5px;color:var(--ink)}
+  .path{font-family:var(--mono);font-size:12.5px;color:var(--primary);background:none;padding:0}
+  pre{background:#1c1b19;color:#e8e3d8;border-radius:12px;padding:18px 20px;overflow-x:auto;
+    font-family:var(--mono);font-size:12.5px;line-height:1.65;margin:0 0 14px}
+  pre .c{color:#8a8378} pre .k{color:#d9a06a} pre .s{color:#9fbf9a} pre .t{color:#7fa7c4}
+
+  .verdict{display:grid;grid-template-columns:1.12fr .88fr;border:1px solid var(--line);border-radius:18px;
+    overflow:hidden;background:var(--card);box-shadow:0 4px 16px -2px rgba(0,0,0,.06)}
+  .verdict-main{padding:28px 32px}
+  .verdict-side{padding:28px 32px;background:var(--primary-soft);border-left:1px solid var(--line)}
+  .vlabel{font-size:11px;letter-spacing:.13em;text-transform:uppercase;font-weight:600;color:var(--primary);margin-bottom:12px}
+  .verdict-main p{margin:0 0 13px}
+  .verdict-main ul{margin:0;padding-left:18px}
+  .verdict-main li{margin-bottom:9px}
+  .verdict-main strong{color:var(--ink)}
+  ul.tight{margin:8px 0 0;padding-left:19px;font-size:14px}
+  ul.tight li{margin-bottom:6px}
+  .doseq{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:11px}
+  .doseq li{display:flex;gap:10px;font-size:13.5px;align-items:flex-start}
+  .doseq .num{flex:none;width:21px;height:21px;border-radius:6px;background:var(--primary);color:#fff;
+    font-size:11.5px;font-weight:600;display:grid;place-items:center;margin-top:1px}
+
+  table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px;background:var(--card);
+    border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+  th,td{padding:12px 14px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line-soft)}
+  th{font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600;background:var(--line-soft)}
+  tr:last-child td{border-bottom:none}
+  td.dim{color:var(--muted)}
+  .axisname{font-weight:600;color:var(--ink);white-space:nowrap}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--good);margin-right:7px;vertical-align:1px}
+  .dot.no{background:#d8d2c4}
+  .dot.warn{background:var(--primary)}
+  .count{font-family:var(--mono);font-size:11.5px;color:var(--muted);white-space:nowrap}
+
+  .fig{margin:24px 0 8px;border:1px solid var(--line);border-radius:16px;background:var(--card);padding:24px;
+    box-shadow:0 2px 8px rgba(0,0,0,.04);overflow-x:auto}
+  .fig svg{display:block;width:100%;height:auto;min-width:660px}
+  .figcap{font-size:12.5px;color:var(--muted);margin:10px 4px 0;text-align:center}
+  .fig-title{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 18px;font-weight:600}
+
+  .callout{border-radius:14px;padding:20px 24px;font-size:14px;border:1px solid var(--line)}
+  .callout.warn{background:var(--primary-soft);border-color:rgba(201,123,63,.26)}
+  .callout.info{background:var(--good-soft);border-color:rgba(47,111,94,.22)}
+  .callout.stop{background:var(--rose-soft);border-color:rgba(176,99,103,.26)}
+  .callout h3{margin-bottom:8px}
+  .callout p:last-child{margin-bottom:0}
+
+  .kv{display:grid;grid-template-columns:158px 1fr;row-gap:9px;column-gap:16px;margin:0;font-size:13.5px}
+  .kv dt{color:var(--muted);border-bottom:1px dashed var(--line);padding-bottom:8px}
+  .kv dd{margin:0;border-bottom:1px dashed var(--line);padding-bottom:8px;color:var(--ink)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .chip{display:inline-block;font-size:10.5px;letter-spacing:.05em;font-weight:600;padding:3px 9px;border-radius:999px;
+    background:var(--line-soft);color:var(--body);border:1px solid var(--line);white-space:nowrap}
+  .chip.g{background:var(--good-soft);color:var(--good);border-color:rgba(47,111,94,.2)}
+  .chip.a{background:var(--primary-soft);color:var(--primary);border-color:rgba(201,123,63,.22)}
+
+  .timeline{list-style:none;padding:0;margin:0;position:relative}
+  .timeline::before{content:"";position:absolute;left:9px;top:10px;bottom:10px;width:2px;
+    background:linear-gradient(var(--primary),rgba(201,123,63,.15))}
+  .timeline li{position:relative;padding:0 0 28px 38px}
+  .timeline li:last-child{padding-bottom:0}
+  .timeline li::before{content:"";position:absolute;left:0;top:3px;width:20px;height:20px;border-radius:50%;
+    background:var(--bg);border:2px solid var(--primary)}
+  .timeline .ph{font-size:11px;letter-spacing:.11em;text-transform:uppercase;color:var(--primary);font-weight:600;margin-bottom:3px}
+  .timeline h3{margin-bottom:7px}
+  .timeline p{margin:0 0 9px;font-size:14px;max-width:78ch}
+  .filelist{margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:7px}
+  .filelist li{font-family:var(--mono);font-size:11.5px;background:var(--line-soft);border:1px solid var(--line);
+    border-radius:6px;padding:4px 9px;color:var(--body)}
+  .filelist li.add{background:var(--primary-soft);border-color:rgba(201,123,63,.24);color:var(--primary)}
+  .effort{display:inline-block;font-family:var(--mono);font-size:11px;color:var(--muted);border:1px solid var(--line);
+    border-radius:999px;padding:2px 9px;margin-left:8px;vertical-align:2px}
+  .bench{display:grid;grid-template-columns:172px 1fr 50px;gap:13px;align-items:center;padding:6px 0}
+  .bench-label{font-size:13px}
+  .bench-track{height:14px;background:var(--line-soft);border-radius:7px;overflow:hidden}
+  .bench-fill{height:100%;background:var(--primary);border-radius:7px}
+  .bench-fill.good{background:var(--good)}
+  .bench-fill.rose{background:var(--rose)}
+  .bench-val{font-family:var(--mono);font-size:11.5px;color:var(--muted);text-align:right}
+  footer{padding:38px 0 0;border-top:1px solid solid;border-top:1px solid var(--line);color:var(--muted);font-size:12.5px}
+  @media (max-width:860px){
+    .verdict{grid-template-columns:1fr}
+    .verdict-side{border-left:none;border-top:1px solid var(--line)}
+    .grid2{grid-template-columns:1fr}
+    .wrap{padding:0 18px 64px}
+    header{padding:40px 0 26px}
+    section{padding:36px 0}
+    .bench{grid-template-columns:120px 1fr 44px;gap:9px}
+    table{font-size:12.5px}
+    th,td{padding:10px 11px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>
+    T3 Code fork · architecture plan
+  </div>
+  <h1>A plugin system for T3 Code</h1>
+  <p class="lede">One generic contract across every extension axis, a runtime-ready loading model, and RustDesk as the first transport plugin. The good news is that most of this already exists in the codebase — it just has three names and no shared spine.</p>
+  <div class="metastrip">
+    <div><dt>Existing axes</dt><dd>3 of 4 already plugin-shaped</dd></div>
+    <div><dt>Hardcoded axis</dt><dd>Transport / reachability</dd></div>
+    <div><dt>First plugin</dt><dd>transport/rustdesk</dd></div>
+    <div><dt>v1 loading</dt><dd>Compile-time registry</dd></div>
+    <div><dt>Runtime loader</dt><dd>Phase 5, out-of-process</dd></div>
+  </div>
+</header>
+
+<!-- ==================== VERDICT ==================== -->
+<section>
+  <h2>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 7v10l8 5 8-5V7z"/><path d="m9 12 2 2 4-4"/></svg>
+    The plan in one screen
+  </h2>
+  <p class="sub">Your three decisions are mutually reinforcing — and one of them turns out to be forced by the AGPL boundary rather than optional.</p>
+
+  <div class="verdict">
+    <div class="verdict-main">
+      <div class="vlabel">Shape</div>
+      <p><strong>Extract the pattern the codebase already uses three times, name it once, and apply it to the one axis that has none.</strong></p>
+      <ul class="tight">
+        <li><code>packages/plugin-core</code> — a generic <code>PluginDefinition</code> + <code>makePluginDefinitionRegistry</code> + a cross-axis <code>PluginCatalog</code>, plus a <code>PLUGIN_CONTRACT_VERSION</code> the loader will check.</li>
+        <li>Each existing axis keeps its own strongly-typed definition that <em>extends</em> the generic one, so nothing is renamed and no package layout churns.</li>
+        <li><strong>Transport</strong> becomes the first axis to use the spine properly — Cloudflare Tunnel, Tailscale and Manual become built-in plugins, and <code>isAddon: true</code> stops being a boolean nobody acts on.</li>
+        <li><strong>RustDesk lands as plugin #1</strong>, and because it must live outside an MIT repo, it is also the first <em>out-of-tree</em> plugin — which is exactly why the runtime-ready contract is not optional.</li>
+      </ul>
+    </div>
+    <div class="verdict-side">
+      <div class="vlabel" style="color:var(--good)">The constraint that decides Phase 5</div>
+      <ol class="doseq">
+        <li><span class="num">1</span><span>RustDesk's server and client are <b>AGPL-3.0</b>. Your fork is MIT.</span></li>
+        <li><span class="num">2</span><span>So the RustDesk implementation <b>cannot live in this repo</b> — unless you relicense your whole fork.</span></li>
+        <li><span class="num">3</span><span>Compile-time-only plugins force everything into the repo. <b>Out-of-tree loading is what keeps the licence boundary clean.</b></span></li>
+        <li><span class="num">4</span><span>Therefore: design the contract for out-of-tree from day one, ship compile-time wiring in v1, and build the loader in Phase 5.</span></li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="callout info" style="margin-top:18px">
+    <h3>What this replaces</h3>
+    <p>You said "more machines" — and you are right that <b>Tailscale already solves that</b>: a link created with <code>managedTunnelsEnabled: false</code> deprovisions the managed endpoint and creates no allocation
+    (<code class="path">infra/relay/src/environments/EnvironmentLinker.ts:292-312</code>), so it never touches the 3-machine counter. That cap is
+    <code>DEFAULT_MANAGED_TUNNEL_LIMIT = 3</code> in <code class="path">packages/contracts/src/relay.ts:969</code> and it counts <em>managed tunnels</em>, not connections.
+    No RustDesk work is needed to lift it — but if you want <em>managed</em> tunnels for more than three machines, raising that one constant still applies.</p>
+    <p style="margin-top:10px">So RustDesk's remaining value is different from what you assumed: it is a <b>reachability transport that needs no Cloudflare account, no DNS zone and no per-tunnel cost</b> — which is a plugin-system requirement, not a machine-count one.</p>
+  </div>
+</section>
+
+<!-- ==================== EXISTING ==================== -->
+<section>
+  <h2>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+    You already have three plugins systems
+  </h2>
+  <p class="sub">The word "plugin" appears zero times in the codebase. But the pattern is everywhere, and it is the same pattern each time.</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width:17%">Axis</th>
+        <th style="width:19%">Kind enum</th>
+        <th style="width:24%">Definition</th>
+        <th style="width:20%">Driver / behaviour</th>
+        <th style="width:11%">Registry</th>
+        <th style="width:9%">Impls</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="axisname">Secret</td>
+        <td class="dim"><code>SecretProviderKind</code><br><span class="src">contracts/src/settings.ts:909</span></td>
+        <td><code>SecretProviderDefinition</code><br><span class="src">secret-provider-core/src/shared/definition.ts</span></td>
+        <td><code>SecretProviderDriver</code><br><span class="src">secret-provider-core/src/server/driver.ts</span></td>
+        <td><span class="dot"></span><code>makeSecretProviderDefinitionRegistry</code></td>
+        <td class="count">1</td>
+      </tr>
+      <tr>
+        <td class="axisname">Source control</td>
+        <td class="dim"><code>SourceControlProviderKind</code></td>
+        <td><code>SourceControlDefinition</code><br><span class="src">source-control-core/src/shared/definition.ts:239</span></td>
+        <td>per-host drivers</td>
+        <td><span class="dot"></span><code>makeSourceControlDefinitionRegistry</code><br><span class="src">…/definition.ts:663</span></td>
+        <td class="count">6</td>
+      </tr>
+      <tr>
+        <td class="axisname">Agent provider</td>
+        <td class="dim">provider kinds</td>
+        <td><code>ProviderAdapterV2</code><br><span class="src">provider-core/src/server/ProviderAdapter.ts</span></td>
+        <td><code>AcpRegistryDriver</code><br><span class="src">provider-acp-registry/src/server/driver.ts</span></td>
+        <td><span class="dot"></span>ACP registry</td>
+        <td class="count">8</td>
+      </tr>
+      <tr>
+        <td class="axisname">Transport</td>
+        <td class="dim"><code>AdvertisedEndpointProviderKind</code><br><span class="src">contracts/src/remoteAccess.ts:5</span><br><code>RelayManagedEndpointProviderKind</code><br><span class="src">contracts/src/relay.ts:155</span></td>
+        <td><span class="dot no"></span><b>none</b></td>
+        <td><span class="dot no"></span><b>none</b></td>
+        <td><span class="dot no"></span><b>none</b></td>
+        <td class="count">0</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="grid2" style="margin-top:18px">
+    <div class="card">
+      <h3>Transport already has the vocabulary</h3>
+      <p style="margin:0 0 12px;font-size:14px">The contract types are there. The <em>mechanism</em> is not:</p>
+      <dl class="kv">
+        <dt>Provider kind</dt><dd><code>AdvertisedEndpointProviderKind</code> — <code>"core" | "private-network" | "tunnel" | "manual"</code></dd>
+        <dt>Addon flag</dt><dd><code>isAddon: Schema.Boolean</code> — <code class="path">contracts/src/remoteAccess.ts:45</code></dd>
+        <dt>Addon source</dt><dd><code>AdvertisedEndpointSource</code> includes <code>"desktop-addon"</code></dd>
+        <dt>The one addon</dt><dd><code>isAddon: true</code> — <code class="path">apps/desktop/src/backend/tailscaleEndpointProvider.ts:22</code>, hardcoded</dd>
+        <dt>The hardcoded list</dt><dd><code class="path">apps/desktop/src/backend/DesktopServerExposure.ts:51-63</code> — <code>DESKTOP_CORE_ENDPOINT_PROVIDER</code>, <code>DESKTOP_MANUAL_ENDPOINT_PROVIDER</code></dd>
+      </dl>
+      <p style="margin:14px 0 0;font-size:13.5px"><code>isAddon</code> and <code>"desktop-addon"</code> are a plugin system with the loading step deleted. <b>Transport is the axis to finish.</b></p>
+    </div>
+    <div class="card">
+      <h3>What the other axes agree on</h3>
+      <p style="margin:0 0 12px;font-size:14px">Three independent axes converged on the same four-part shape without a shared package:</p>
+      <ul class="tight">
+        <li><b>Definition</b> — pure data plus pure functions. No I/O, no services. This is what makes it serialisable, which is what makes runtime loading possible later.</li>
+        <li><b>Driver / adapter</b> — the behaviour, expressed as an Effect service or a set of operations. Separate from the definition so the definition can be shipped to a client that only renders a picker.</li>
+        <li><b>Registry</b> — a lookup by kind, built from a frozen array. <code>makeSecretProviderDefinitionRegistry</code> and <code>makeSourceControlDefinitionRegistry</code> are near-identical, including the duplicate-kind guard.</li>
+        <li><b>Definitions package</b> — the aggregate that names every built-in, with ordering rules where order matters (<code>claimChangeRequestUrlsFirst</code>, <code>recognizeRemotesIn</code>).</li>
+      </ul>
+      <p style="margin:14px 0 0;font-size:13.5px">That is the spine to extract. It is not a Cordis clone — it is the pattern this codebase already chose, three times, independently.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== CORE ==================== -->
+<section>
+  <h2>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="9"/></svg>
+    The generic core
+  </h2>
+  <p class="sub">Small on purpose. <code>AGENTS.md</code> is explicit: do not introduce machinery because it looks architecturally impressive; fight for the smallest model that makes the correct behaviour unsurprising.</p>
+
+  <div class="fig">
+    <p class="fig-title">The contract — <code>packages/plugin-core</code></p>
+    <svg viewBox="0 0 980 268" role="img" aria-label="Plugin core contract and the four axes">
+      <defs>
+        <marker id="pa" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto">
+          <path d="M0,0 L0,6.4 L7.5,3.2 z" fill="#c97b3f"/>
+        </marker>
+      </defs>
+      <!-- core -->
+      <rect x="330" y="16" width="320" height="92" rx="14" fill="rgba(201,123,63,.09)" stroke="rgba(201,123,63,.34)"/>
+      <text x="490" y="42" text-anchor="middle" font-family="Outfit" font-size="14.5" font-weight="600" fill="#c97b3f">plugin-core</text>
+      <text x="490" y="63" text-anchor="middle" font-family="JetBrains Mono" font-size="10.5" fill="#3a4256">PluginDefinition · PluginAxis</text>
+      <text x="490" y="79" text-anchor="middle" font-family="JetBrains Mono" font-size="10.5" fill="#3a4256">makePluginDefinitionRegistry</text>
+      <text x="490" y="95" text-anchor="middle" font-family="JetBrains Mono" font-size="10.5" fill="#3a4256">PLUGIN_CONTRACT_VERSION</text>
+      <!-- axes -->
+      <rect x="24" y="164" width="196" height="76" rx="12" fill="#fff" stroke="#e9e3d6"/>
+      <text x="122" y="190" text-anchor="middle" font-family="Outfit" font-size="13" font-weight="600" fill="#14171e">transport</text>
+      <text x="122" y="210" text-anchor="middle" font-family="Outfit" font-size="11.5" fill="#7c7a72">new — plugin #1</text>
+      <text x="122" y="228" text-anchor="middle" font-family="JetBrains Mono" font-size="10.5" fill="#7c7a72">rustdesk · tailscale</text>
+      <rect x="248" y="164" width="196" height="76" rx="12" fill="#fff" stroke="#e9e3d6"/>
+      <text x="346" y="190" text-anchor="middle" font-family="Outfit" font-size="13" font-weight="600" fill="#14171e">secret</text>
+      <text x="346" y="210" text-anchor="middle" font-family="Outfit" font-size="11.5" fill="#7c7a72">existing</text>
+      <text x="346" y="228" text-anchor="middle" font-family="JetBrains Mono" font-size="10.5" fill="#7c7a72">onepassword</text>
+      <rect x="472" y="164" width="196" height="76" rx="12" fill="#fff" stroke="#e9e3d6"/>
+      <text x="570" y="190" text-anchor="middle" font-family="Outfit" font-size="13" font-weight="600" fill="#14171e">source-control</text>
+      <text x="570" y="210" text-anchor="middle" font-family="Outfit" font-size="11.5" fill="#7c7a72">existing</text>
+      <text x="570" y="228" text-anchor="middle" font-family="JetBrains Mono" font-size="10.5" fill="#7c7a72">6 hosts</text>
+      <rect x="696" y="164" width="196" height="76" rx="12" fill="#fff" stroke="#e9e3d6"/>
+      <text x="794" y="190" text-anchor="middle" font-family="Outfit" font-size="13" font-weight="600" fill="#14171e">provider</text>
+      <text x="794" y="210" text-anchor="middle" font-family="Outfit" font-size="11.5" fill="#7c7a72">existing</text>
+      <text x="794" y="228" text-anchor="middle" font-family="JetBrains Mono" font-size="10.5" fill="#7c7a72">8 agents</text>
+      <!-- arrows -->
+      <path d="M380 108 C 300 108, 220 130, 130 160" fill="none" stroke="#c97b3f" stroke-width="1.6" marker-end="url(#pa)"/>
+      <path d="M440 108 C 400 108, 370 130, 348 160" fill="none" stroke="#c97b3f" stroke-width="1.6" marker-end="url(#pa)"/>
+      <path d="M540 108 C 560 108, 560 130, 570 160" fill="none" stroke="#c97b3f" stroke-width="1.6" marker-end="url(#pa)"/>
+      <path d="M600 108 C 690 108, 740 130, 792 160" fill="none" stroke="#c97b3f" stroke-width="1.6" marker-end="url(#pa)"/>
+      <text x="490" y="130" text-anchor="middle" font-family="Outfit" font-size="11.5" fill="#7c7a72">each axis keeps its own strongly-typed definition, which extends the generic one</text>
+    </svg>
+    <p class="figcap">Nothing is renamed and no package layout churns. The axis-specific definition keeps its own shape; it simply gains <code>axis</code>, a namespaced <code>kind</code>, and a config schema it already had.</p>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>Definition — the data half</h3>
+      <pre><span class="c">// packages/plugin-core/src/shared/definition.ts</span>
+<span class="k">export const</span> PluginAxis = Schema.Literals([
+  <span class="s">"transport"</span>, <span class="s">"secret"</span>, <span class="s">"source-control"</span>, <span class="s">"provider"</span>,
+]);
+
+<span class="k">export interface</span> PluginDefinition&lt;Config = <span class="t">unknown</span>&gt; {
+  <span class="c">/** Namespaced and stable: "transport/rustdesk". Never reused. */</span>
+  <span class="k">readonly</span> kind: <span class="t">string</span>;
+  <span class="k">readonly</span> axis: PluginAxis;
+  <span class="k">readonly</span> label: <span class="t">string</span>;
+  <span class="k">readonly</span> description?: <span class="t">string</span>;
+  <span class="k">readonly</span> configSchema: Schema.Codec&lt;Config, <span class="t">unknown</span>&gt;;
+}</pre>
+      <p style="margin:0;font-size:13px;color:var(--muted)">Pure data, pure functions, no services — so a definition can cross the wire to a client that only renders a picker, and so it can be validated from a file on disk.</p>
+    </div>
+    <div class="card">
+      <h3>Registry — the lookup half</h3>
+      <pre><span class="k">export function</span> makePluginDefinitionRegistry&lt;D <span class="k">extends</span> PluginDefinition&gt;(
+  definitions: <span class="t">ReadonlyArray</span>&lt;D&gt;,
+  options?: { <span class="k">readonly</span> order?: <span class="t">ReadonlyArray</span>&lt;<span class="t">string</span>&gt; },
+): PluginDefinitionRegistry&lt;D&gt; {
+  <span class="k">const</span> byKind = <span class="k">new</span> Map&lt;<span class="t">string</span>, D&gt;();
+  <span class="k">for</span> (<span class="k">const</span> d <span class="k">of</span> definitions) {
+    <span class="k">if</span> (byKind.has(d.kind))
+      <span class="k">throw new</span> Error(<span class="s">`Plugin '${d.kind}' is defined more than once.`</span>);
+    byKind.set(d.kind, d);
+  }
+  <span class="k">return</span> { definitions, find: (k) =&gt; byKind.get(k) };
+}</pre>
+      <p style="margin:0;font-size:13px;color:var(--muted)">This is <code>makeSecretProviderDefinitionRegistry</code> generalised — same duplicate guard, plus an ordering escape hatch borrowed from <code>makeSourceControlDefinitionRegistry</code>, whose <code>claimChangeRequestUrlsFirst</code> and <code>recognizeRemotesIn</code> options are exactly the "order matters" case.</p>
+    </div>
+  </div>
+
+  <div class="callout warn" style="margin-top:18px">
+    <h3>One contract change you cannot skip</h3>
+    <p><code>AdvertisedEndpointProviderKind</code> and <code>RelayManagedEndpointProviderKind</code> are closed <code>Schema.Literals</code>. A plugin whose kind is only known at runtime cannot be expressed by a closed union. Both must become <strong>open, namespaced strings</strong> (<code>"transport/rustdesk"</code>), with the closed union kept only for the built-ins that the client needs to reason about specially.</p>
+    <p style="margin-top:10px">Per <code>AGENTS.md</code> — "Anything crossing the wire is typed in <code>packages/contracts</code>. Change the schema and the server, web, mobile, and desktop all follow" — this touches every surface, and it needs the round trip: a way in, a way out, and a way to see it.</p>
+  </div>
+</section>
+
+<!-- ==================== TRANSPORT ==================== -->
+<section>
+  <h2>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M5 8h14M5 16h14"/><path d="m9 4 3 4-3 4M9 12l3 4-3 4"/></svg>
+    The transport axis
+  </h2>
+  <p class="sub">Transport is the axis that needs the plugin model most, because it is the only one with two different failure modes: host-side discovery and relay-side provisioning.</p>
+
+  <div class="fig">
+    <p class="fig-title">From hard-coded lists to one plugin interface</p>
+    <svg viewBox="0 0 980 330" role="img" aria-label="Transport plugin model">
+      <defs>
+        <marker id="tb" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto">
+          <path d="M0,0 L0,6.4 L7.5,3.2 z" fill="#2f6f5e"/>
+        </marker>
+        <marker id="tc" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto">
+          <path d="M0,0 L0,6.4 L7.5,3.2 z" fill="#c97b3f"/>
+        </marker>
+      </defs>
+      <!-- interface -->
+      <rect x="300" y="16" width="380" height="96" rx="14" fill="rgba(47,111,94,.08)" stroke="rgba(47,111,94,.32)"/>
+      <text x="490" y="42" text-anchor="middle" font-family="Outfit" font-size="14.5" font-weight="600" fill="#2f6f5e">TransportPlugin</text>
+      <text x="490" y="63" text-anchor="middle" font-family="JetBrains Mono" font-size="10.5" fill="#3a4256">definition: TransportPluginDefinition</text>
+      <text x="490" y="79" text-anchor="middle" font-family="JetBrains Mono" font-size="10.5" fill="#3a4256">advertise(input) → AdvertisedEndpoint[]</text>
+      <text x="490" y="95" text-anchor="middle" font-family="JetBrains Mono" font-size="10.5" fill="#3a4256">provision?(input) → ManagedEndpoint</text>
+      <!-- impls -->
+      <rect x="24" y="176" width="180" height="74" rx="12" fill="#fff" stroke="#e9e3d6"/>
+      <text x="114" y="202" text-anchor="middle" font-family="Outfit" font-size="12.5" font-weight="600" fill="#14171e">cloudflare-tunnel</text>
+      <text x="114" y="222" text-anchor="middle" font-family="Outfit" font-size="11" fill="#7c7a72">provision only</text>
+      <text x="114" y="238" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#7c7a72">connector: cloudflared</text>
+      <rect x="228" y="176" width="180" height="74" rx="12" fill="#fff" stroke="#e9e3d6"/>
+      <text x="318" y="202" text-anchor="middle" font-family="Outfit" font-size="12.5" font-weight="600" fill="#14171e">tailscale</text>
+      <text x="318" y="222" text-anchor="middle" font-family="Outfit" font-size="11" fill="#7c7a72">advertise only</text>
+      <text x="318" y="238" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#7c7a72">spawns tailscale CLI</text>
+      <rect x="432" y="176" width="180" height="74" rx="12" fill="#fff" stroke="#e9e3d6"/>
+      <text x="522" y="202" text-anchor="middle" font-family="Outfit" font-size="12.5" font-weight="600" fill="#14171e">manual</text>
+      <text x="522" y="222" text-anchor="middle" font-family="Outfit" font-size="11" fill="#7c7a72">advertise only</text>
+      <text x="522" y="238" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#7c7a72">user-supplied URL</text>
+      <rect x="636" y="176" width="180" height="74" rx="12" fill="rgba(201,123,63,.08)" stroke="rgba(201,123,63,.34)"/>
+      <text x="726" y="202" text-anchor="middle" font-family="Outfit" font-size="12.5" font-weight="600" fill="#c97b3f">rustdesk</text>
+      <text x="726" y="222" text-anchor="middle" font-family="Outfit" font-size="11" fill="#7c7a72">both, no public URL</text>
+      <text x="726" y="238" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#7c7a72">out-of-tree, AGPL</text>
+      <rect x="840" y="176" width="120" height="74" rx="12" fill="rgba(201,123,63,.08)" stroke="rgba(201,123,63,.34)" stroke-dasharray="5 4"/>
+      <text x="900" y="206" text-anchor="middle" font-family="Outfit" font-size="12.5" font-weight="600" fill="#c97b3f">…</text>
+      <text x="900" y="226" text-anchor="middle" font-family="Outfit" font-size="10.5" fill="#7c7a72">ngrok</text>
+      <text x="900" y="241" text-anchor="middle" font-family="Outfit" font-size="10.5" fill="#7c7a72">wireguard</text>
+      <!-- arrows -->
+      <path d="M400 112 C 320 112, 210 140, 116 172" fill="none" stroke="#2f6f5e" stroke-width="1.6" marker-end="url(#tb)"/>
+      <path d="M450 112 C 400 112, 350 140, 318 172" fill="none" stroke="#2f6f5e" stroke-width="1.6" marker-end="url(#tb)"/>
+      <path d="M530 112 C 530 130, 525 150, 522 172" fill="none" stroke="#2f6f5e" stroke-width="1.6" marker-end="url(#tb)"/>
+      <path d="M580 112 C 660 112, 700 140, 724 172" fill="none" stroke="#c97b3f" stroke-width="1.6" marker-end="url(#tb)"/>
+      <path d="M600 112 C 760 112, 860 140, 898 172" fill="none" stroke="#c97b3f" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#tb)"/>
+      <!-- today annotation -->
+      <rect x="300" y="278" width="380" height="38" rx="10" fill="rgba(176,99,103,.06)" stroke="rgba(176,99,103,.24)"/>
+      <text x="490" y="302" text-anchor="middle" font-family="Outfit" font-size="12" fill="#3a4256">Today: two hard-coded providers in <tspan font-family="JetBrains Mono" font-size="11">DesktopServerExposure.ts</tspan> plus Cloudflare-only in the relay.</text>
+    </svg>
+    <p class="figcap">The interface has two optional operations because the two modes are genuinely different: <code>advertise</code> runs on the host and lists what is reachable right now; <code>provision</code> runs on the relay and creates an account-bound managed endpoint. Cloudflare needs the second, Tailscale needs the first, RustDesk needs both — and needs a client-side agent because it produces no public URL.</p>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>The capability flags that carry the weight</h3>
+      <pre><span class="k">export interface</span> TransportPluginDefinition
+  <span class="k">extends</span> PluginDefinition&lt;TransportConfig&gt; {
+  <span class="k">readonly</span> reachability: AdvertisedEndpointReachability;
+  <span class="c">/** Whether this transport yields a URL a browser can open directly. */</span>
+  <span class="k">readonly</span> providesPublicUrl: <span class="t">boolean</span>;
+  <span class="c">/** Whether a host-side binary must be present for it to work. */</span>
+  <span class="k">readonly</span> requiresHostConnector: <span class="t">boolean</span>;
+  <span class="c">/** Whether a client-side agent must be present. */</span>
+  <span class="k">readonly</span> requiresClientAgent: <span class="t">boolean</span>;
+}</pre>
+      <p style="margin:0;font-size:13px;color:var(--muted)">These three booleans are the whole reason the transport axis could not be a plugin before: the client and the relay need to know, before choosing a route, whether the endpoint is a URL they can open or an agent they must attach to. Naming them in the contract is what lets the UI branch honestly instead of guessing.</p>
+    </div>
+    <div class="card">
+      <h3>What the connector spec reuses</h3>
+      <p style="margin:0 0 12px;font-size:14px">The host already downloads, verifies, pins and self-updates a binary. That whole mechanism generalises to any transport that needs one:</p>
+      <dl class="kv">
+        <dt>Current</dt><dd><code class="path">packages/shared/src/relayClient.ts</code> — <code>CLOUDFLARED_VERSION = "2026.10.4"</code> (line 31), release assets, sha256, install, swap, rollback</dd>
+        <dt>Generalise to</dt><dd><code>ConnectorSpec { id, version, minVersion, urls, sha256, spawn(args) }</code>, one per transport plugin</dd>
+        <dt>Host side</dt><dd><code class="path">apps/server/src/cloud/ManagedEndpointRuntime.ts:729-756</code> — spawns <code>cloudflared tunnel … run</code> with <code>TUNNEL_TOKEN</code></dd>
+        <dt>RustDesk needs</dt><dd>a connector with <em>two</em> roles: host (register, accept sessions, proxy to <code>127.0.0.1</code>) and client (request a session, expose a local origin)</dd>
+      </dl>
+      <p style="margin:14px 0 0;font-size:13.5px">The download/verify/update machinery is the expensive part and it is already written. A RustDesk connector reuses it wholesale.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== RUSTDESK ==================== -->
+<section>
+  <h2>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M5 12h14"/><path d="m9 6 3-3 3 3M9 18l3 3 3-3"/></svg>
+    RustDesk as plugin #1
+  </h2>
+  <p class="sub">It validates the contract harder than any built-in could, because it is the first transport that breaks the URL assumption.</p>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>What it proves</h3>
+      <ul class="tight" style="margin-top:6px">
+        <li><b>A plugin with no public URL.</b> RustDesk yields peers, not addresses, so <code>providesPublicUrl: false</code> has to mean something real in the client runtime.</li>
+        <li><b>A plugin with two connectors.</b> Host side and client side have to be pinned, verified and spawned independently.</li>
+        <li><b>A plugin outside the repo.</b> AGPL forbids it living in an MIT monorepo, so the contract has to work across a process and a package boundary.</li>
+        <li><b>A plugin with real crypto.</b> Ed25519 verification, X25519 key agreement, NaCl <code>crypto_box</code>, and a relay framing the plugin does not own.</li>
+        <li><b>A plugin that is not ours.</b> The public servers are somebody else's infrastructure, so failure modes and rate limits are not yours to absorb.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>What it costs</h3>
+      <ul class="tight" style="margin-top:6px">
+        <li><b>The client-side agent.</b> RustDesk has no URL for the client to open, so either the client runtime speaks the transport natively, or a sidecar exposes a local origin. Sidecar is far cheaper — zero app changes on desktop and mobile — but it does not work in a browser.</li>
+        <li><b>The browser gap.</b> A hosted web client cannot run a sidecar. Either web keeps the Cloudflare path, or the page speaks RustDesk over WebSocket (ports 21118 / 21119) with NaCl in the browser.</li>
+        <li><b>Licence containment.</b> The implementation lives in a separate AGPL repository and is loaded as an out-of-tree plugin. The loader must be able to run a plugin it did not build.</li>
+        <li><b>Someone else's server.</b> The public community servers are a shared free resource. Self-hosting <code>rustdesk-server</code> OSS is a small VPS and removes the ambiguity.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout stop" style="margin-top:18px">
+    <h3>The licence constraint, stated plainly</h3>
+    <p><code>rustdesk/rustdesk-server</code>, <code>rustdesk/rustdesk</code> and <code>rustdesk/hbb_common</code> are <b>AGPL-3.0</b> — and <code>hbb_common</code> has no licence file of its own, only its place inside the AGPL server tree. Your fork is <b>MIT</b>.</p>
+    <p style="margin-top:10px">If the RustDesk implementation lived inside this repo, you would be distributing an AGPL work inside an MIT work. It cannot. So the RustDesk plugin must be <b>out-of-tree</b>: its own repository, AGPL-licensed, loaded at runtime by the plugin host.</p>
+    <p style="margin-top:10px">This is why "both from day one" was the right call, and it is a stronger reason than extensibility for itself. <b>Compile-time-only plugins and an AGPL RustDesk implementation are mutually exclusive.</b> A separate process communicating over a socket is the standard "separate programs" arrangement, but this is a legal judgement — get counsel before you ship.</p>
+  </div>
+</section>
+
+<!-- ==================== RUNTIME ==================== -->
+<section>
+  <h2>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="9"/></svg>
+    Runtime readiness, without a runtime loader
+  </h2>
+  <p class="sub">v1 ships compile-time wiring. The contract is shaped so that Phase 5 is additive, not a rewrite. The design rule that makes this work: <em>the definition carries the data, the driver carries the behaviour, and the two are joined by kind</em>.</p>
+
+  <div class="fig">
+    <p class="fig-title">One contract, two acquisition paths</p>
+    <svg viewBox="0 0 980 300" role="img" aria-label="Compile-time registry today, runtime loader later">
+      <defs>
+        <marker id="td" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto">
+          <path d="M0,0 L0,6.4 L7.5,3.2 z" fill="#7c7a72"/>
+        </marker>
+        <marker id="te" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto">
+          <path d="M0,0 L0,6.4 L7.5,3.2 z" fill="#2f6f5e"/>
+        </marker>
+      </defs>
+      <!-- v1 -->
+      <rect x="24" y="26" width="440" height="118" rx="14" fill="#fff" stroke="#e9e3d6"/>
+      <text x="48" y="52" font-family="Outfit" font-size="13.5" font-weight="600" fill="#14171e">v1 — compile-time wiring</text>
+      <rect x="48" y="66" width="180" height="56" rx="10" fill="var(--line-soft)" stroke="#e9e3d6"/>
+      <text x="138" y="88" text-anchor="middle" font-family="JetBrains Mono" font-size="10.5" fill="#3a4256">static import</text>
+      <text x="138" y="106" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#7c7a72">plugin-definitions/registry.ts</text>
+      <rect x="252" y="66" width="188" height="56" rx="10" fill="rgba(47,111,94,.07)" stroke="rgba(47,111,94,.26)"/>
+      <text x="346" y="88" text-anchor="middle" font-family="JetBrains Mono" font-size="10.5" fill="#2f6f5e">PluginDefinitionRegistry</text>
+      <text x="346" y="106" text-anchor="middle" font-family="Outfit" font-size="10" fill="#7c7a72">same type either way</text>
+      <!-- later -->
+      <rect x="516" y="26" width="440" height="118" rx="14" fill="rgba(47,111,94,.05)" stroke="rgba(47,111,94,.26)" stroke-dasharray="6 4"/>
+      <text x="540" y="52" font-family="Outfit" font-size="13.5" font-weight="600" fill="#2f6f5e">Phase 5 — out-of-tree loader</text>
+      <rect x="540" y="66" width="188" height="56" rx="10" fill="#fff" stroke="rgba(47,111,94,.26)"/>
+      <text x="634" y="88" text-anchor="middle" font-family="JetBrains Mono" font-size="10.5" fill="#3a4256">plugin.json manifest</text>
+      <text x="634" y="106" text-anchor="middle" font-family="Outfit" font-size="10" fill="#7c7a72">contractVersion · entry</text>
+      <rect x="752" y="66" width="180" height="56" rx="10" fill="rgba(47,111,94,.09)" stroke="rgba(47,111,94,.26)"/>
+      <text x="842" y="88" text-anchor="middle" font-family="JetBrains Mono" font-size="10.5" fill="#2f6f5e">PluginDefinitionRegistry</text>
+      <text x="842" y="106" text-anchor="middle" font-family="Outfit" font-size="10" fill="#7c7a72">same type either way</text>
+      <!-- bottom: the guard -->
+      <rect x="24" y="186" width="932" height="86" rx="12" fill="rgba(176,99,103,.055)" stroke="rgba(176,99,103,.26)"/>
+      <text x="48" y="212" font-family="Outfit" font-size="13.5" font-weight="600" fill="#b06367">The loader must not run plugin code inside the server process</text>
+      <text x="48" y="234" font-family="Outfit" font-size="12.5" fill="#3a4256">The T3 server holds provider credentials and spawns agent CLIs. Loading a plugin with <tspan font-family="JetBrains Mono" font-size="11.5">import()</tspan> in that process is arbitrary code execution with your credentials.</text>
+      <text x="48" y="256" font-family="Outfit" font-size="12.5" fill="#3a4256">So: a child process per plugin, a narrow IPC protocol, signed bundles, and a contract-version check. T3 Code already has the precedent — <tspan font-family="JetBrains Mono" font-size="11.5">cloudflared</tspan> is downloaded, checksummed and spawned, not imported.</text>
+      <path d="M244 148 L 244 182" stroke="#7c7a72" stroke-width="1.6" marker-end="url(#td)"/>
+      <path d="M842 148 L 842 182" stroke="#2f6f5e" stroke-width="1.6" marker-end="url(#te)"/>
+    </svg>
+    <p class="figcap">Because the registry type is identical on both paths, adding the loader later is additive. The compile-time path stays the default, the safe path, and the one the settings UI shows by default.</p>
+  </div>
+
+  <div class="card">
+    <h3>What "runtime-ready" actually requires of the contract — four rules</h3>
+    <ol class="tight" style="margin:6px 0 0;padding-left:20px;font-size:14px">
+      <li><b>Definitions are data, and they validate.</b> A definition read from disk must pass the same schema as a compiled-in one, or the plugin host is just a way to bypass the type system.</li>
+      <li><b>Kinds are namespaced and never reused.</b> <code>"transport/rustdesk"</code> — so a kind can be matched, routed and persisted without a closed union, and without two plugins colliding.</li>
+      <li><b>A contract version exists and is checked.</b> <code>PLUGIN_CONTRACT_VERSION</code> in <code>plugin-core</code>; a bundle declares the version it was built against and is refused on mismatch. Without this, a plugin compiled against an older contract fails somewhere deep in a call site instead of at load.</li>
+      <li><b>Behaviour is behind a service, not in the definition.</b> The definition is what a client renders; the driver is what the server runs. Splitting them is what lets the server refuse to load a plugin while still showing it in a picker.</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ==================== PHASES ==================== -->
+<section>
+  <h2>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6v6l4 2"/><circle cx="12" cy="12" r="10"/></svg>
+    Phases
+  </h2>
+  <p class="sub">Six phases. Phases 1 and 2 are worth shipping even if RustDesk never lands — they are the plugin system, which is what you actually asked for.</p>
+
+  <ol class="timeline">
+    <li>
+      <div class="ph">Phase 1 · The spine<span class="effort">3–4 days</span></div>
+      <h3><code>packages/plugin-core</code></h3>
+      <p>The generic contract, the registry factory, the cross-axis catalog, and the contract version. Nothing else changes; this package is additive and imports nothing, so it can land on its own. Wire up a contract test that every axis's definition satisfies the generic shape — that test is what stops the four axes drifting apart again.</p>
+      <ul class="filelist">
+        <li class="add">packages/plugin-core/src/shared/definition.ts</li>
+        <li class="add">packages/plugin-core/src/shared/catalog.ts</li>
+        <li class="add">packages/plugin-core/src/shared/contractVersion.ts</li>
+        <li>packages/contracts/src/plugin.ts</li>
+      </ul>
+    </li>
+
+    <li>
+      <div class="ph">Phase 2 · Transport becomes plugins<span class="effort">5–7 days</span></div>
+      <h3>Migrate the one axis that has no mechanism</h3>
+      <p>Define <code>TransportPlugin</code> and <code>TransportPluginDefinition</code>; convert Cloudflare Tunnel, Tailscale and Manual into built-in plugins; replace the hard-coded provider list in <code class="path">apps/desktop/src/backend/DesktopServerExposure.ts:51-63</code> with a registry lookup; and make <code>isAddon</code> mean "not a core provider" instead of a boolean nothing reads. On the relay side, <code>ManagedEndpointProvider</code> becomes one implementation behind the same interface.</p>
+      <p>This phase alone gives you a working plugin system on a real axis, with three plugins, no new dependencies and no licence questions.</p>
+      <ul class="filelist">
+        <li class="add">packages/plugin-transport/src/shared/definition.ts</li>
+        <li class="add">packages/transport-cloudflare/</li>
+        <li class="add">packages/transport-tailscale/</li>
+        <li>apps/desktop/src/backend/DesktopServerExposure.ts</li>
+        <li>apps/desktop/src/backend/tailscaleEndpointProvider.ts</li>
+        <li>infra/relay/src/environments/ManagedEndpointProvider.ts</li>
+        <li>packages/contracts/src/remoteAccess.ts:5</li>
+        <li>packages/contracts/src/relay.ts:155</li>
+      </ul>
+    </li>
+
+    <li>
+      <div class="ph">Phase 3 · RustDesk, out of tree<span class="effort">3–4 weeks</span></div>
+      <h3>The first plugin that is not in this repo</h3>
+      <p>A separate AGPL repository: the connector (rendezvous client, signed key exchange, relay pairing, byte proxy, both host and client roles), plus a plugin bundle that exports its definition and driver. It speaks the RustDesk protocol — which is documented in <code>rendezvous.proto</code> and, crucially, the relay is a content-agnostic byte forwarder, so the transport carries whatever the plugin needs it to carry.</p>
+      <p>Then the client-side agent: a sidecar that exposes a local origin so the existing client runtime needs no change at all on desktop and mobile. The web surface is the open question — see the phase note.</p>
+      <ul class="filelist">
+        <li class="add">(separate AGPL repo) connector</li>
+        <li class="add">(separate AGPL repo) plugin bundle</li>
+        <li>packages/client-runtime/src/transport/session.ts</li>
+      </ul>
+    </li>
+
+    <li>
+      <div class="ph">Phase 4 · Conform the other axes<span class="effort">1–2 weeks</span></div>
+      <h3>One spine, four axes</h3>
+      <p>Make the secret, source-control and agent-provider definitions extend the generic contract — keeping their own types, their own extra registry options and their own packages. Add a plugin catalog the settings UI can render, so a user sees every extension the build has in one place. This is the phase that turns "three plugins systems" into "one", and it is mostly type-level work.</p>
+      <ul class="filelist">
+        <li>packages/secret-provider-core/src/shared/definition.ts</li>
+        <li>packages/source-control-core/src/shared/definition.ts:239</li>
+        <li>packages/provider-core/src/server/ProviderAdapter.ts</li>
+        <li>apps/web/src/components/settings/</li>
+      </ul>
+    </li>
+
+    <li>
+      <div class="ph">Phase 5 · The loader<span class="effort">2–3 weeks</span></div>
+      <h3>Load plugins from disk, out of process</h3>
+      <p>Read <code>plugin.json</code> manifests from a plugin directory, verify the contract version and the bundle signature, spawn each plugin as a child process with a narrow IPC surface, and merge the definitions into the same registry the compile-time path fills. The compile-time path stays the default and the safe one.</p>
+      <p>This is the phase that makes the RustDesk AGPL boundary work, so it is not optional if Phase 3 ships — it is the phase that lets Phase 3 exist outside the repo.</p>
+      <ul class="filelist">
+        <li class="add">packages/plugin-loader/src/</li>
+        <li class="add">packages/plugin-host/ (child process, IPC)</li>
+      </ul>
+    </li>
+
+    <li>
+      <div class="ph">Phase 6 · Surface<span class="effort">1 week</span></div>
+      <h3>Make plugins visible and controllable</h3>
+      <p>Settings surfaces for installed plugins, enable/disable, per-plugin configuration through the config schema, and honest failure: a plugin that cannot reach its transport reports <code>status: "unavailable"</code> rather than disappearing. <code>AGENTS.md</code> is clear that a one-way door is a bug — if a user can install a plugin they must be able to remove it and see what it did.</p>
+    </li>
+  </ol>
+</section>
+
+<!-- ==================== RISKS ==================== -->
+<section>
+  <h2>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+    Risks, and the guardrails
+  </h2>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>Scope</h3>
+      <p style="margin:0 0 10px;font-size:14px">"One generic core across all axes" is a real risk of becoming four half-migrated axes. The mitigation is ordering:</p>
+      <ul class="tight">
+        <li>Phase 2 migrates <b>one</b> axis completely, end to end, before Phase 4 touches another.</li>
+        <li>Phase 4 is conforming, not rewriting — the axis keeps its own types and its own registry options.</li>
+        <li>If Phase 4 stalls, you still have a working plugin system on transport, which was the actual goal.</li>
+      </ul>
+      <p style="margin:12px 0 0;font-size:13.5px;color:var(--muted)">This ordering is the direct reading of <code>AGENTS.md</code>: "Do not preserve complexity just because it already exists… fight for the smallest model."</p>
+    </div>
+    <div class="card">
+      <h3>Security</h3>
+      <p style="margin:0 0 10px;font-size:14px">Runtime plugins are code you did not write, running near credentials you care about. Three rules:</p>
+      <ul class="tight">
+        <li><b>Out of process, always.</b> A child process per plugin with a narrow IPC surface — the same shape as the <code>cloudflared</code> connector already in the tree.</li>
+        <li><b>Signed and version-checked.</b> Manifest carries the contract version and a signature; a mismatch is refused at load, not at first call.</li>
+        <li><b>Explicit consent.</b> Installing a plugin is a deliberate act, shown with its axis, its capabilities and what it can reach.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Licence</h3>
+      <p style="margin:0 0 10px;font-size:14px">The one thing that cannot be engineered around.</p>
+      <ul class="tight">
+        <li>RustDesk's implementation is AGPL-3.0 and lives outside this repo.</li>
+        <li><code>hbb_common</code> has no licence of its own; do not vendor it.</li>
+        <li>A separate process over a socket is the standard separate-programs arrangement, but confirm with counsel before shipping.</li>
+        <li>Self-host <code>rustdesk-server</code> OSS for anything real — it is a small VPS and removes the shared-resource question.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Surfaces</h3>
+      <p style="margin:0 0 10px;font-size:14px">Per <code>AGENTS.md</code>, a contract change lands on every client.</p>
+      <ul class="tight">
+        <li>Open, namespaced kinds ripple through web, mobile and desktop.</li>
+        <li>Providers, contracts, the settings UI and the command palette each need a decision.</li>
+        <li>A plugin that adds a route must also add the way to remove it, and the way to see it.</li>
+        <li>Budget a round of "hit every surface" review — it is the most common defect class in this repo.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== NEXT ==================== -->
+<section>
+  <h2>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    What I would do next
+  </h2>
+  <div class="card">
+    <ol class="tight" style="margin:0;padding-left:20px;font-size:14.5px">
+      <li><b>Phase 1 now, on this branch.</b> <code>packages/plugin-core</code> is additive, imports nothing, and can land on its own. It also settles the contract before anything depends on it.</li>
+      <li><b>Phase 2 next, on this branch.</b> Converting Cloudflare, Tailscale and Manual into plugins proves the model on a real axis without a licence question or a new dependency. When that lands, you have a plugin system — which was the actual ask.</li>
+      <li><b>Phase 3 in a second repository.</b> The RustDesk connector and bundle, AGPL, out of tree. This is where the licence boundary and the loader design get proven.</li>
+      <li><b>Phase 5 before Phase 3 ships.</b> The loader is what makes an out-of-tree plugin possible, so it cannot be scheduled after the thing that depends on it — even though it is written later.</li>
+    </ol>
+    <p style="margin:16px 0 0;font-size:14px">Two things worth deciding before Phase 1: whether the plugin <b>kind</b> stays namespaced (<code>"transport/rustdesk"</code>) or becomes a flat string with an axis field — namespaced is safer and costs nothing now; and whether a plugin may ship <b>settings UI</b> in v1, which I would defer, since a config schema plus a JSON form covers the first three transports without it.</p>
+  </div>
+</section>
+
+<footer>
+  <p>Sources cited inline as <code>path:line</code> against <code>pingdotgg/t3code</code> (MIT) and the RustDesk repositories (AGPL-3.0). The RustDesk transport analysis behind plugin #1 is in the companion document <code>research/rustdesk-transport/plan.html</code>, with the evidence log in <code>evidence.md</code>.</p>
+  <p style="margin-top:8px">Prepared 6 November 2026 · fork at github.com/dadahsueh/t3code · branch research/rustdesk-transport</p>
+</footer>
+
+</div>
+</body>
+</html>
